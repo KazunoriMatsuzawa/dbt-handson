@@ -1,0 +1,101 @@
+
+# このファイルは dbt プロジェクトの設定ファイルです。
+# dbt on Snowflake での実行に必要な構成をすべて定義しています。
+
+name: 'analytics_web_events'
+version: '1.0.0'
+config-version: 2
+
+# Project Meta: プロジェクト全体のメタデータ
+profile: 'snowflake'
+
+# Model Paths: モデルファイルの場所
+model-paths: ["models"]
+analysis-paths: ["analysis"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Seeds: CSV データをテーブルに変換する設定
+seeds:
+  analytics_web_events:
+    +schema: staging
+    +materialized: table
+
+# Models: デフォルト設定
+models:
+  analytics_web_events:
+    # =====================================
+    # STAGING レイヤー
+    # =====================================
+    # 目的：生データの軽い加工、カラム名/型の標準化
+    # Materialization：VIEW（軽量、最新データ）
+    staging:
+      +materialized: view
+      +tags: ["staging"]
+      # テスト定義は tests/schema.yml に集約しています
+
+    # =====================================
+    # INTERMEDIATE レイヤー
+    # =====================================
+    # 目的：複数テーブルの結合、複雑な加工
+    # Materialization：VIEW（軽量）
+    intermediate:
+      +materialized: view
+      +tags: ["intermediate"]
+
+    # =====================================
+    # MARTS レイヤー
+    # =====================================
+    # 目的：ビジネス向けの最終データマート
+    # Materialization：TABLE（パフォーマンス重視）
+    marts:
+      +materialized: table
+      +tags: ["marts"]
+      +schema: marts
+
+# Tests: テスト設定
+tests:
+  store_failures: true  # テスト失敗時に失敗レコードを保存
+
+# Vars: グローバル変数（プロジェクト全体で使用可能）
+vars:
+  # 分析対象期間
+  analytics_lookback_days: 30
+  min_sample_size: 5
+  # 週別集計の基準開始日
+  start_date: '2025-01-01'
+
+  # イベント種別の定義
+  event_types:
+    - page_view
+    - click
+    - purchase
+    - sign_up
+    - add_to_cart
+    - checkout
+
+# Database and Schema Configuration
+# dbt on Snowflake 実行時、以下の設定が使用されます
+# 注：実際の設定は profiles.yml で指定
+
+# On-Build Hooks: dbt build 実行時の事前処理
+on-run-start:
+  - "{{ log('Starting dbt run', info=true) }}"
+
+# On-Build Hooks: dbt build 実行完了時の事後処理
+on-run-end:
+  - "{{ log('Completed dbt run', info=true) }}"
+
+# Pre/Post Hooks（モデル個別）
+# models/staging/stg_events.sql などで設定可能
+# Example:
+# {{ config(
+#   pre_hook="CREATE TEMPORARY TABLE ...",
+#   post_hook="GRANT SELECT ON TABLE {{ this }} TO ROLE analyst"
+# )}}
