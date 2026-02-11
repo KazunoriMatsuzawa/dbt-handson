@@ -1,6 +1,6 @@
 /*
 ================================================================================
-ステップ5：ビュー、マテリアライズドビュー
+ステップ5：ビュー、ダイナミックテーブル
 ================================================================================
 
 【目的】
@@ -9,15 +9,19 @@
 
 【学習ポイント】
   - VIEW（ビュー）：リアルタイムデータ参照
-  - MATERIALIZED VIEW（マテリアライズドビュー）：事前計算済みデータ
+  - DYNAMIC TABLE（ダイナミックテーブル）：自動更新される事前計算済みデータ
   - ビューの利点・制限事項
   - いつどちらを使うか
 
 【実務での応用】
   - 複雑なクエリ定義を再利用
   - データアクセス権限の制御
-  - パフォーマンス最適化（マテビュー）
+  - パフォーマンス最適化（ダイナミックテーブル）
   - 標準レポート定義
+
+【補足】
+  MATERIALIZED VIEW は Enterprise Edition 以上が必要です。
+  本ハンズオンでは Standard Edition でも利用可能な DYNAMIC TABLE を使用します。
 */
 
 -- =====================================================================
@@ -30,7 +34,7 @@ SELECT
     COUNT(*) AS EVENT_COUNT,
     COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
     COUNT(DISTINCT SESSION_ID) AS UNIQUE_SESSIONS
-FROM RAW_EVENTS
+FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
 GROUP BY DATE(EVENT_TIMESTAMP);
 
 -- ビューの確認
@@ -69,8 +73,8 @@ SELECT
         WHEN u.PLAN_TYPE = 'premium' THEN 'Premium User'
         ELSE 'Free User'
     END AS USER_SEGMENT
-FROM RAW_EVENTS e
-INNER JOIN USERS u
+FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS e
+INNER JOIN DIESELPJ_TEST.DBT_HANDSON.USERS u
     ON e.USER_ID = u.USER_ID;
 
 -- ビューの使用
@@ -86,7 +90,7 @@ LIMIT 20;
 
 注意：
   VIEWは毎回クエリ実行時にベーステーブルをスキャンするため、
-  大規模データでのパフォーマンスが懸念される場合はMATERIALIZED VIEWを検討
+  大規模データでのパフォーマンスが懸念される場合は DYNAMIC TABLE を検討
 */
 
 
@@ -101,8 +105,8 @@ SELECT
     COUNT(*) AS EVENT_COUNT,
     COUNT(DISTINCT e.USER_ID) AS USER_COUNT,
     COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END) AS PURCHASE_COUNT
-FROM RAW_EVENTS e
-INNER JOIN USERS u ON e.USER_ID = u.USER_ID
+FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS e
+INNER JOIN DIESELPJ_TEST.DBT_HANDSON.USERS u ON e.USER_ID = u.USER_ID
 GROUP BY DATE(e.EVENT_TIMESTAMP), u.COUNTRY;
 
 -- VIEWからのクエリ
@@ -146,67 +150,89 @@ VIEWの重要な役割：
    ✓ 日付範囲等でフィルタを含める
 
 4. VIEWのパフォーマンス最適化なし
-   - クエリが遅い場合は MATERIALIZED VIEW を検討
+   - クエリが遅い場合は DYNAMIC TABLE を検討
 */
 
 
 -- =====================================================================
--- MATERIALIZED VIEW（マテリアライズドビュー）
+-- DYNAMIC TABLE（ダイナミックテーブル）
 -- =====================================================================
 
-CREATE OR REPLACE MATERIALIZED VIEW MV_DAILY_SUMMARY AS
+/*
+【DYNAMIC TABLE とは】
+  Snowflake が提供する自動更新型のテーブルです。
+  MATERIALIZED VIEW の進化版で、Standard Edition でも利用可能です。
+  TARGET_LAG を指定すると、Snowflake が自動的にデータを更新します。
+*/
+
+CREATE OR REPLACE DYNAMIC TABLE DT_DAILY_SUMMARY
+  TARGET_LAG = '1 day'       -- データ鮮度：最大1日遅延で自動更新
+  WAREHOUSE = COMPUTE_WH     -- 更新処理に使用するウェアハウス
+AS
 SELECT
     DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
     COUNT(*) AS EVENT_COUNT,
     COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
     COUNT(DISTINCT SESSION_ID) AS UNIQUE_SESSIONS,
     COUNT(DISTINCT CASE WHEN EVENT_TYPE = 'purchase' THEN EVENT_ID END) AS PURCHASE_COUNT
-FROM RAW_EVENTS
+FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
 GROUP BY DATE(EVENT_TIMESTAMP);
 
--- マテビューの確認
-SELECT * FROM MV_DAILY_SUMMARY
+-- ダイナミックテーブルの確認
+SELECT * FROM DT_DAILY_SUMMARY
 ORDER BY EVENT_DATE DESC;
 
 /*
-【MATERIALIZED VIEW の特性】
+【DYNAMIC TABLE の特性】
   1. 実データを物理的に保持（ディスク領域を消費）
   2. クエリ結果を事前計算・保存
-  3. 参照時は計算済みデータを即座に返す
-  4. 手動更新が必要（リアルタイムではない）
+  3. TARGET_LAG に基づいて Snowflake が自動更新
+  4. 手動更新も可能（ALTER DYNAMIC TABLE ... REFRESH）
 
 【用途】
   - 複雑な集計をする場合（パフォーマンス改善）
   - よくアクセスされるレポート
   - リアルタイム性より処理速度優先の場合
+  - データパイプラインの構築（DT同士の依存関係を自動管理）
 */
 
 
 -- =====================================================================
--- MATERIALIZED VIEW の更新
+-- DYNAMIC TABLE の更新管理
 -- =====================================================================
 
--- マテビューの更新（手動トリガー）
-ALTER MATERIALIZED VIEW MV_DAILY_SUMMARY REFRESH;
+-- 手動で即座に更新したい場合
+ALTER DYNAMIC TABLE DT_DAILY_SUMMARY REFRESH;
 
 -- 更新後の確認
-SELECT * FROM MV_DAILY_SUMMARY
+SELECT * FROM DT_DAILY_SUMMARY
 ORDER BY EVENT_DATE DESC;
 
+-- ダイナミックテーブルの更新状況を確認
+SELECT *
+FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY())
+ORDER BY REFRESH_START_TIME DESC
+LIMIT 10;
+
 /*
-【マテビュー更新の方法】
-  1. 手動更新：ALTER MATERIALIZED VIEW ... REFRESH;
-  2. スケジュール更新：タスク（ステップ7で詳しく解説）
-  3. 自動更新：Snowflakeの Dynamic Tables（参考資料参照）
+【ダイナミックテーブルの更新方法】
+  1. 自動更新：TARGET_LAG の設定に基づき Snowflake が自動実行（推奨）
+  2. 手動更新：ALTER DYNAMIC TABLE ... REFRESH;（緊急時など）
+
+  TARGET_LAG の設定例：
+    '1 minute'  -- 1分ごと（ニアリアルタイム）
+    '1 hour'    -- 1時間ごと
+    '1 day'     -- 1日ごと（日次バッチ向け）
+    DOWNSTREAM  -- 下流のDTが更新されるときに連動
 
 重要：
-  マテビューの更新をスキップすると、古いデータが参照される
-  ビジネス要件に応じた更新スケジュール設計が必須
+  TARGET_LAG が短いほどデータは新鮮だが、ウェアハウスのコストが増加
+  ビジネス要件に応じた TARGET_LAG 設計が必須
 */
 
 
 -- =====================================================================
--- VIEW vs MATERIALIZED VIEW の比較
+-- VIEW vs DYNAMIC TABLE の比較
 -- =====================================================================
 
 /*
@@ -224,20 +250,22 @@ ORDER BY EVENT_DATE DESC;
     - 小～中規模データセット
     - 参照頻度が低い
 
-【MATERIALIZED VIEW】
+【DYNAMIC TABLE】
   メリット：
     - クエリが高速（事前計算）
-    - ディスク効率が良い（集計済み）
-    - パフォーマンス安定
+    - 自動更新（TARGET_LAG による管理）
+    - 依存関係の自動管理（DT同士のパイプライン構築）
+    - Standard Edition で利用可能
   デメリット：
     - ストレージ消費
-    - データ鮮度に遅延
-    - 更新管理が必要
+    - データ鮮度に遅延（TARGET_LAG による）
+    - ウェアハウスコストが発生
 
   推奨：
     - 複雑な集計を頻繁に参照
     - 大規模データセット
     - 鮮度の遅延が許容可能
+    - データパイプラインを構築したい
 */
 
 
@@ -274,11 +302,14 @@ INNER JOIN USERS u ON e.USER_ID = u.USER_ID;
 
 
 -- =====================================================================
--- VIEWの定義確認・削除
+-- VIEWとダイナミックテーブルの定義確認・削除
 -- =====================================================================
 
 -- ビューの一覧確認
 SHOW VIEWS;
+
+-- ダイナミックテーブルの一覧確認
+SHOW DYNAMIC TABLES;
 
 -- 特定ビューの定義確認
 DESCRIBE VIEW V_DAILY_EVENTS;
@@ -286,41 +317,35 @@ DESCRIBE VIEW V_DAILY_EVENTS;
 -- ビューのコード確認（Snowflake独自コマンド）
 SELECT GET_DDL('VIEW', 'V_DAILY_EVENTS');
 
+-- ダイナミックテーブルの定義確認
+SELECT GET_DDL('DYNAMIC_TABLE', 'DT_DAILY_SUMMARY');
+
 -- ビュー削除（必要に応じて）
 -- DROP VIEW V_DAILY_EVENTS;
 
--- マテビュー削除（必要に応じて）
--- DROP MATERIALIZED VIEW MV_DAILY_SUMMARY;
+-- ダイナミックテーブル削除（必要に応じて）
+DROP DYNAMIC TABLE DT_DAILY_SUMMARY;
 
 
 -- =====================================================================
--- Dynamic Tables（Snowflakeの最新機能・参考情報）
+-- DYNAMIC TABLE と MATERIALIZED VIEW の違い（参考情報）
 -- =====================================================================
 
 /*
-【Dynamic Tables】
-  Snowflake の最新機能で、MATERIALIZED VIEW の進化版です
+【MATERIALIZED VIEW との比較】
+  MATERIALIZED VIEW は Enterprise Edition 以上で利用可能な機能です。
+  Standard Edition では DYNAMIC TABLE を代替として利用します。
 
-特徴：
-  - 自動更新スケジュール設定可能
-  - MATERIALIZED VIEW より自動化が充実
-  - 依存関係の自動管理
+  MATERIALIZED VIEW:
+    - Enterprise Edition 以上が必要
+    - 手動更新（ALTER MATERIALIZED VIEW ... REFRESH）
+    - 単純な集計向き
 
-構文（参考）：
-CREATE OR REPLACE DYNAMIC TABLE DT_DAILY_SUMMARY
-LAG = '1 day'  -- 更新頻度：1日ごと
-WAREHOUSE = compute_wh
-AS
-SELECT
-    DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
-    COUNT(*) AS EVENT_COUNT,
-    COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
-FROM RAW_EVENTS
-GROUP BY DATE(EVENT_TIMESTAMP);
-
-注：
-  本ハンズオンでは実装しませんが、
-  Snowflake のベストプラクティスとして Dynamic Tables の検討を推奨
+  DYNAMIC TABLE:
+    - Standard Edition から利用可能
+    - TARGET_LAG による自動更新
+    - 複雑なクエリ・JOIN・複数段パイプラインに対応
+    - DT同士の依存関係を自動管理
 */
 
 
@@ -331,46 +356,46 @@ GROUP BY DATE(EVENT_TIMESTAMP);
 /*
 【推奨】
 
-1. ビュー名は明確で説明的に
+1. ビュー名・DT名は明確で説明的に
    ✓ V_DAILY_USER_EVENTS (何の日別集計か明確)
-   ✓ MV_COUNTRY_SUMMARY (マテビューであることが分かる)
+   ✓ DT_COUNTRY_SUMMARY (ダイナミックテーブルであることが分かる)
    ❌ v_x (意味不明)
    ❌ summary (ビューか元テーブルか不明)
 
 2. プレフィックスの使い分け
-   - v_*：通常のVIEW
-   - mv_*：MATERIALIZED VIEW
-   - vw_*：ビューであることを明示（オプション）
+   - V_*：通常のVIEW
+   - DT_*：DYNAMIC TABLE
+   - VW_*：ビューであることを明示（オプション）
 
-3. ビューの更新ポリシーを文書化
+3. 更新ポリシーを文書化
    VIEWはリアルタイム
-   MATERIALIZED VIEWは更新スケジュールを明記
+   DYNAMIC TABLE は TARGET_LAG の設定値を明記
 
 4. 複雑なビューは分割
    1つのビューが複数の責務を持たないように
 
 5. パフォーマンス監視
    SELECT * FROM view_name の実行時間を定期確認
-   遅い場合は MATERIALIZED VIEW への移行検討
+   遅い場合は DYNAMIC TABLE への移行検討
 
-6. ビュー定義のバージョン管理
-   Git等でビュー定義を保存
+6. ビュー・DT定義のバージョン管理
+   Git等で定義を保存
    dbt と連携する場合は dbt の models/ に含める
 */
 
 
 -- =====================================================================
--- まとめ：VIEW と MATERIALIZED VIEW の使い分け
+-- まとめ：VIEW と DYNAMIC TABLE の使い分け
 -- =====================================================================
 
--- 【ケース1】リアルタイムで最新イベントを確認したい
+-- 【ケース1】リアルタイムで最新イベントを確認したい → VIEW
 CREATE OR REPLACE VIEW V_LATEST_EVENTS AS
 SELECT
     EVENT_ID,
     USER_ID,
     EVENT_TYPE,
     EVENT_TIMESTAMP
-FROM RAW_EVENTS
+FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
 WHERE EVENT_TIMESTAMP >= DATEADD(hour, -1, CURRENT_TIMESTAMP())
 ORDER BY EVENT_TIMESTAMP DESC;
 
@@ -378,8 +403,11 @@ ORDER BY EVENT_TIMESTAMP DESC;
 SELECT * FROM V_LATEST_EVENTS LIMIT 20;
 
 
--- 【ケース2】複雑な日別集計をよく参照する（パフォーマンス重視）
-CREATE OR REPLACE MATERIALIZED VIEW MV_DAILY_PERFORMANCE AS
+-- 【ケース2】複雑な日別集計をよく参照する（パフォーマンス重視）→ DYNAMIC TABLE
+CREATE OR REPLACE DYNAMIC TABLE DT_DAILY_PERFORMANCE
+  TARGET_LAG = '1 day'
+  WAREHOUSE = COMPUTE_WH
+AS
 SELECT
     DATE(e.EVENT_TIMESTAMP) AS EVENT_DATE,
     u.COUNTRY,
@@ -398,17 +426,20 @@ INNER JOIN USERS u ON e.USER_ID = u.USER_ID
 GROUP BY DATE(e.EVENT_TIMESTAMP), u.COUNTRY, u.PLAN_TYPE;
 
 -- 参照：事前計算されたデータを即座に返す
-SELECT * FROM MV_DAILY_PERFORMANCE
+SELECT * FROM DT_DAILY_PERFORMANCE
 WHERE EVENT_DATE >= DATEADD(day, -7, CURRENT_DATE())
 ORDER BY EVENT_DATE DESC, PURCHASE_COUNT DESC;
 
--- 更新（定期的に実行：タスクで自動化）
-ALTER MATERIALIZED VIEW MV_DAILY_PERFORMANCE REFRESH;
+-- 手動更新（緊急時のみ。通常は TARGET_LAG で自動更新される）
+ALTER DYNAMIC TABLE DT_DAILY_PERFORMANCE REFRESH;
+
+
 
 /*
 このセクションで学んだポイント：
   1. VIEW：リアルタイムデータ参照用
-  2. MATERIALIZED VIEW：複雑集計をパフォーマンス重視で利用
+  2. DYNAMIC TABLE：複雑集計をパフォーマンス重視で利用（自動更新付き）
   3. 使い分けはビジネス要件（鮮度 vs パフォーマンス）による
-  4. dbt に移行する際も、このビュー設計の概念が応用される
+  4. TARGET_LAG でデータ鮮度とコストのバランスを調整
+  5. dbt に移行する際も、このビュー / DT 設計の概念が応用される
 */

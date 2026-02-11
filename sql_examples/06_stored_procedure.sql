@@ -87,7 +87,7 @@ BEGIN
         COUNT(*) AS EVENT_COUNT,
         COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
         COUNT(DISTINCT SESSION_ID) AS UNIQUE_SESSIONS
-    FROM RAW_EVENTS
+    FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
     GROUP BY DATE(EVENT_TIMESTAMP);
 
     -- ステップ3：完了メッセージを返す
@@ -140,16 +140,16 @@ BEGIN
     )
     SELECT
         DATE(e.EVENT_TIMESTAMP) AS EVENT_DATE,
-        p_country AS COUNTRY,
+        :p_country AS COUNTRY,
         COUNT(*) AS EVENT_COUNT,
         COUNT(DISTINCT e.USER_ID) AS UNIQUE_USERS,
         COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END) AS PURCHASE_COUNT
-    FROM RAW_EVENTS e
-    INNER JOIN USERS u ON e.USER_ID = u.USER_ID
-    WHERE u.COUNTRY = p_country
+    FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS e
+    INNER JOIN DIESELPJ_TEST.DBT_HANDSON.USERS u ON e.USER_ID = u.USER_ID
+    WHERE u.COUNTRY = :p_country
     GROUP BY DATE(e.EVENT_TIMESTAMP);
 
-    RETURN '✓ Processing completed for country: ' || p_country;
+    RETURN '✓ Processing completed for country: ' || :p_country;
 END;
 $$;
 
@@ -196,30 +196,30 @@ BEGIN
         DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
         COUNT(*) AS EVENT_COUNT,
         COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
-    FROM RAW_EVENTS
+    FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
     GROUP BY DATE(EVENT_TIMESTAMP);
 
     -- ステップ3：挿入件数を取得
-    SELECT COUNT(*) INTO v_record_count FROM DAILY_SUMMARY;
+    SELECT COUNT(*) INTO :v_record_count FROM DAILY_SUMMARY;
 
     -- ステップ4：今日のイベント数を取得
-    SELECT COUNT(*) INTO v_today_events FROM RAW_EVENTS
+    SELECT COUNT(*) INTO :v_today_events FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
     WHERE DATE(EVENT_TIMESTAMP) = CURRENT_DATE();
 
     -- ステップ5：バリデーション
-    IF v_record_count > 0 THEN
-        SET v_status_message = '✓ Summary inserted: ' || v_record_count || ' days';
+    IF (:v_record_count > 0) THEN
+        v_status_message := '✓ Summary inserted: ' || :v_record_count || ' days';
     ELSE
-        SET v_status_message = '✗ Error: No summary data inserted';
+        v_status_message := '✗ Error: No summary data inserted';
     END IF;
 
-    IF v_today_events > 0 THEN
-        SET v_status_message = v_status_message || ' | Today events: ' || v_today_events;
+    IF (:v_today_events > 0) THEN
+        v_status_message := :v_status_message || ' | Today events: ' || :v_today_events;
     ELSE
-        SET v_status_message = v_status_message || ' | Warning: No events today';
+        v_status_message := :v_status_message || ' | Warning: No events today';
     END IF;
 
-    RETURN v_status_message;
+    RETURN :v_status_message;
 END;
 $$;
 
@@ -262,7 +262,7 @@ DECLARE
     v_step_2_rows INTEGER;
     v_step_3_rows INTEGER;
 BEGIN
-    SET v_start_time = CURRENT_TIMESTAMP();
+    v_start_time := CURRENT_TIMESTAMP();
 
     -- ========== ステップ1：日別集計テーブルを更新 ==========
     TRUNCATE TABLE DAILY_SUMMARY;
@@ -272,10 +272,10 @@ BEGIN
         DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
         COUNT(*) AS EVENT_COUNT,
         COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
-    FROM RAW_EVENTS
+    FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
     GROUP BY DATE(EVENT_TIMESTAMP);
 
-    SELECT COUNT(*) INTO v_step_1_rows FROM DAILY_SUMMARY;
+    SELECT COUNT(*) INTO :v_step_1_rows FROM DAILY_SUMMARY;
 
     -- ========== ステップ2：週別集計テーブルを更新 ==========
     TRUNCATE TABLE WEEKLY_SUMMARY;
@@ -293,10 +293,10 @@ BEGIN
         COUNT(*) AS EVENT_COUNT,
         COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
         COUNT(DISTINCT CASE WHEN EVENT_TYPE = 'purchase' THEN EVENT_ID END) AS PURCHASE_COUNT
-    FROM RAW_EVENTS
+    FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
     GROUP BY DATE_TRUNC('WEEK', EVENT_TIMESTAMP);
 
-    SELECT COUNT(*) INTO v_step_2_rows FROM WEEKLY_SUMMARY;
+    SELECT COUNT(*) INTO :v_step_2_rows FROM WEEKLY_SUMMARY;
 
     -- ========== ステップ3：アクティブユーザーテーブルを更新 ==========
     TRUNCATE TABLE ACTIVE_USERS;
@@ -306,22 +306,22 @@ BEGIN
         USER_ID,
         MAX(DATE(EVENT_TIMESTAMP)) AS LAST_EVENT_DATE,
         COUNT(*) AS TOTAL_EVENTS
-    FROM RAW_EVENTS
+    FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
     WHERE DATE(EVENT_TIMESTAMP) >= DATEADD(day, -30, CURRENT_DATE())
     GROUP BY USER_ID;
 
-    SELECT COUNT(*) INTO v_step_3_rows FROM ACTIVE_USERS;
+    SELECT COUNT(*) INTO :v_step_3_rows FROM ACTIVE_USERS;
 
     -- ========== ステップ4：実行時間を計算 ==========
-    SET v_end_time = CURRENT_TIMESTAMP();
+    v_end_time := CURRENT_TIMESTAMP();
 
     -- ========== 完了メッセージ ==========
     RETURN 'Pipeline execution completed successfully! ' ||
-           'Step1: ' || v_step_1_rows || ' rows, ' ||
-           'Step2: ' || v_step_2_rows || ' rows, ' ||
-           'Step3: ' || v_step_3_rows || ' rows. ' ||
+           'Step1: ' || :v_step_1_rows || ' rows, ' ||
+           'Step2: ' || :v_step_2_rows || ' rows, ' ||
+           'Step3: ' || :v_step_3_rows || ' rows. ' ||
            'Execution time: ' ||
-           DATEDIFF(second, v_start_time, v_end_time) || ' seconds.';
+           DATEDIFF(second, :v_start_time, :v_end_time) || ' seconds.';
 END;
 $$;
 
@@ -362,7 +362,7 @@ BEGIN
             DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
             COUNT(*) AS EVENT_COUNT,
             COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
-        FROM RAW_EVENTS
+        FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
         GROUP BY DATE(EVENT_TIMESTAMP);
 
         -- 成功時
@@ -371,13 +371,13 @@ BEGIN
     EXCEPTION
         WHEN STATEMENT_ERROR THEN
             -- SQLエラー時（例：テーブルが存在しない）
-            SET v_error_message = 'SQL Error occurred during data update';
-            RETURN '✗ ' || v_error_message;
+            v_error_message := 'SQL Error occurred during data update';
+            RETURN '✗ ' || :v_error_message;
 
         WHEN OTHER THEN
             -- その他のエラー
-            SET v_error_message = 'Unknown error occurred';
-            RETURN '✗ ' || v_error_message;
+            v_error_message := 'Unknown error occurred';
+            RETURN '✗ ' || :v_error_message;
     END;
 END;
 $$;

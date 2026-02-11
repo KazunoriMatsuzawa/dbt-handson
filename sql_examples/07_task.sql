@@ -24,24 +24,12 @@
 */
 
 -- =====================================================================
--- 前提：タスク実行に必要なウェアハウスの確認
--- =====================================================================
-
--- タスク実行用のウェアハウスを確認・作成
-CREATE OR REPLACE WAREHOUSE IF NOT EXISTS task_wh
-WITH
-    WAREHOUSE_SIZE = 'XSMALL'
-    AUTO_SUSPEND = 60  -- 60分後に自動停止
-    AUTO_RESUME = TRUE;  -- 自動開始
-
-
--- =====================================================================
 -- タスク1：シンプルな定期実行タスク（毎日実行）
 -- =====================================================================
 
 -- タスク定義
 CREATE OR REPLACE TASK tsk_daily_summary
-WAREHOUSE = task_wh
+WAREHOUSE = COMPUTE_WH
 SCHEDULE = 'USING CRON 0 1 * * * UTC'  -- 毎日 01:00 UTC に実行
 AS
 CALL sp_calculate_daily_summary();
@@ -78,13 +66,13 @@ SHOW TASKS LIKE 'tsk_daily_summary%';
 
 -- 国別の集計タスク
 CREATE OR REPLACE TASK tsk_daily_summary_us
-WAREHOUSE = task_wh
+WAREHOUSE = COMPUTE_WH
 SCHEDULE = 'USING CRON 0 2 * * * UTC'  -- 毎日 02:00 UTC
 AS
 CALL sp_calculate_daily_summary_for_country('US');
 
 CREATE OR REPLACE TASK tsk_daily_summary_jp
-WAREHOUSE = task_wh
+WAREHOUSE = COMPUTE_WH
 SCHEDULE = 'USING CRON 0 2 * * * UTC'  -- 毎日 02:00 UTC
 AS
 CALL sp_calculate_daily_summary_for_country('JP');
@@ -107,14 +95,14 @@ ALTER TASK tsk_daily_summary_jp RESUME;
 
 -- 最初に実行する親タスク
 CREATE OR REPLACE TASK tsk_parent_daily_summary
-WAREHOUSE = task_wh
+WAREHOUSE = COMPUTE_WH
 SCHEDULE = 'USING CRON 0 1 * * * UTC'
 AS
 CALL sp_calculate_daily_summary();
 
 -- 親タスク完了後に実行される子タスク
 CREATE OR REPLACE TASK tsk_child_weekly_summary
-WAREHOUSE = task_wh
+WAREHOUSE = COMPUTE_WH
 AFTER tsk_parent_daily_summary  -- 親タスク完了待ち
 AS
 -- 週別集計（日別集計テーブルから生成）
@@ -151,15 +139,15 @@ ALTER TASK tsk_child_weekly_summary RESUME;
 
 -- 親タスク：イベントログのクレンジング
 CREATE OR REPLACE TASK tsk_etl_clean_events
-WAREHOUSE = task_wh
+WAREHOUSE = COMPUTE_WH
 SCHEDULE = 'USING CRON 0 1 * * * UTC'
 AS
-DELETE FROM RAW_EVENTS
+DELETE FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
 WHERE EVENT_TIMESTAMP IS NULL OR USER_ID IS NULL;
 
 -- 子タスク1：日別集計
 CREATE OR REPLACE TASK tsk_etl_daily_summary
-WAREHOUSE = task_wh
+WAREHOUSE = COMPUTE_WH
 AFTER tsk_etl_clean_events
 AS
 INSERT INTO DAILY_SUMMARY (EVENT_DATE, EVENT_COUNT, UNIQUE_USERS)
@@ -167,12 +155,12 @@ SELECT
     DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
     COUNT(*) AS EVENT_COUNT,
     COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
-FROM RAW_EVENTS
+FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
 GROUP BY DATE(EVENT_TIMESTAMP);
 
 -- 子タスク2：アクティブユーザー分析
 CREATE OR REPLACE TASK tsk_etl_active_users
-WAREHOUSE = task_wh
+WAREHOUSE = COMPUTE_WH
 AFTER tsk_etl_clean_events
 AS
 INSERT INTO ACTIVE_USERS (USER_ID, LAST_EVENT_DATE, TOTAL_EVENTS)
@@ -180,7 +168,7 @@ SELECT
     USER_ID,
     MAX(DATE(EVENT_TIMESTAMP)) AS LAST_EVENT_DATE,
     COUNT(*) AS TOTAL_EVENTS
-FROM RAW_EVENTS
+FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
 WHERE DATE(EVENT_TIMESTAMP) >= DATEADD(day, -30, CURRENT_DATE())
 GROUP BY USER_ID;
 
@@ -206,7 +194,7 @@ ALTER TASK tsk_etl_active_users RESUME;
 -- =====================================================================
 
 CREATE OR REPLACE TASK tsk_direct_sql_insert
-WAREHOUSE = task_wh
+WAREHOUSE = COMPUTE_WH
 SCHEDULE = 'USING CRON 0 3 * * * UTC'
 AS
 INSERT INTO DAILY_SUMMARY (EVENT_DATE, EVENT_COUNT, UNIQUE_USERS)
@@ -214,7 +202,7 @@ SELECT
     DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
     COUNT(*) AS EVENT_COUNT,
     COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
-FROM RAW_EVENTS
+FROM DIESELPJ_TEST.DBT_HANDSON.RAW_EVENTS
 GROUP BY DATE(EVENT_TIMESTAMP)
 ON CONFLICT DO UPDATE SET
     EVENT_COUNT = EXCLUDED.EVENT_COUNT,
