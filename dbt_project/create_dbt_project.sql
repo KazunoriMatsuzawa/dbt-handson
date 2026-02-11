@@ -23,7 +23,7 @@ dbt on Snowflake - プロジェクト作成コマンド
 -- =====================================================================
 
 -- dbt実行用ウェアハウスを作成
-CREATE OR REPLACE WAREHOUSE dbt_wh
+CREATE OR REPLACE WAREHOUSE DBT_WH
 WITH
     WAREHOUSE_SIZE = 'SMALL'
     AUTO_SUSPEND = 60
@@ -31,7 +31,7 @@ WITH
     SCALING_POLICY = 'STANDARD';
 
 -- ウェアハウスの確認
-SHOW WAREHOUSES LIKE 'dbt_wh';
+SHOW WAREHOUSES LIKE 'DBT_WH';
 
 
 -- =====================================================================
@@ -39,21 +39,21 @@ SHOW WAREHOUSES LIKE 'dbt_wh';
 -- =====================================================================
 
 -- データベース確認・作成
-CREATE OR REPLACE DATABASE analytics;
+CREATE OR REPLACE DATABASE ANALYTICS;
 
 -- スキーマ作成（層別）
-CREATE OR REPLACE SCHEMA analytics.staging;
-CREATE OR REPLACE SCHEMA analytics.intermediate;
-CREATE OR REPLACE SCHEMA analytics.marts;
+CREATE OR REPLACE SCHEMA ANALYTICS.STAGING;
+CREATE OR REPLACE SCHEMA ANALYTICS.INTERMEDIATE;
+CREATE OR REPLACE SCHEMA ANALYTICS.MARTS;
 
 -- スキーマ権限設定
-GRANT USAGE ON DATABASE analytics TO ROLE transformer;
-GRANT USAGE ON SCHEMA analytics.staging TO ROLE transformer;
-GRANT USAGE ON SCHEMA analytics.intermediate TO ROLE transformer;
-GRANT USAGE ON SCHEMA analytics.marts TO ROLE transformer;
-GRANT CREATE TABLE ON SCHEMA analytics.staging TO ROLE transformer;
-GRANT CREATE TABLE ON SCHEMA analytics.intermediate TO ROLE transformer;
-GRANT CREATE TABLE ON SCHEMA analytics.marts TO ROLE transformer;
+GRANT USAGE ON DATABASE ANALYTICS TO ROLE TRANSFORMER;
+GRANT USAGE ON SCHEMA ANALYTICS.STAGING TO ROLE TRANSFORMER;
+GRANT USAGE ON SCHEMA ANALYTICS.INTERMEDIATE TO ROLE TRANSFORMER;
+GRANT USAGE ON SCHEMA ANALYTICS.MARTS TO ROLE TRANSFORMER;
+GRANT CREATE TABLE ON SCHEMA ANALYTICS.STAGING TO ROLE TRANSFORMER;
+GRANT CREATE TABLE ON SCHEMA ANALYTICS.INTERMEDIATE TO ROLE TRANSFORMER;
+GRANT CREATE TABLE ON SCHEMA ANALYTICS.MARTS TO ROLE TRANSFORMER;
 
 
 -- =====================================================================
@@ -109,31 +109,31 @@ CREATE DBT PROJECT IF NOT EXISTS my_analytics_project
 -- =====================================================================
 
 -- dbt 実行用ロールの作成
-CREATE OR REPLACE ROLE transformer;
+CREATE OR REPLACE ROLE TRANSFORMER;
 
 -- ウェアハウス権限
-GRANT USAGE ON WAREHOUSE dbt_wh TO ROLE transformer;
-GRANT OPERATE ON WAREHOUSE dbt_wh TO ROLE transformer;
+GRANT USAGE ON WAREHOUSE DBT_WH TO ROLE TRANSFORMER;
+GRANT OPERATE ON WAREHOUSE DBT_WH TO ROLE TRANSFORMER;
 
 -- データベース・スキーマ権限
-GRANT USAGE ON DATABASE analytics TO ROLE transformer;
-GRANT USAGE ON SCHEMA analytics.public TO ROLE transformer;
-GRANT USAGE ON SCHEMA analytics.staging TO ROLE transformer;
-GRANT USAGE ON SCHEMA analytics.intermediate TO ROLE transformer;
-GRANT USAGE ON SCHEMA analytics.marts TO ROLE transformer;
+GRANT USAGE ON DATABASE ANALYTICS TO ROLE TRANSFORMER;
+GRANT USAGE ON SCHEMA ANALYTICS.PUBLIC TO ROLE TRANSFORMER;
+GRANT USAGE ON SCHEMA ANALYTICS.STAGING TO ROLE TRANSFORMER;
+GRANT USAGE ON SCHEMA ANALYTICS.INTERMEDIATE TO ROLE TRANSFORMER;
+GRANT USAGE ON SCHEMA ANALYTICS.MARTS TO ROLE TRANSFORMER;
 
 -- テーブル作成権限
-GRANT CREATE TABLE ON SCHEMA analytics.staging TO ROLE transformer;
-GRANT CREATE TABLE ON SCHEMA analytics.intermediate TO ROLE transformer;
-GRANT CREATE TABLE ON SCHEMA analytics.marts TO ROLE transformer;
+GRANT CREATE TABLE ON SCHEMA ANALYTICS.STAGING TO ROLE TRANSFORMER;
+GRANT CREATE TABLE ON SCHEMA ANALYTICS.INTERMEDIATE TO ROLE TRANSFORMER;
+GRANT CREATE TABLE ON SCHEMA ANALYTICS.MARTS TO ROLE TRANSFORMER;
 
 -- ビュー作成権限
-GRANT CREATE VIEW ON SCHEMA analytics.staging TO ROLE transformer;
-GRANT CREATE VIEW ON SCHEMA analytics.intermediate TO ROLE transformer;
+GRANT CREATE VIEW ON SCHEMA ANALYTICS.STAGING TO ROLE TRANSFORMER;
+GRANT CREATE VIEW ON SCHEMA ANALYTICS.INTERMEDIATE TO ROLE TRANSFORMER;
 
 -- ユーザーにロールを付与
 -- (適切なユーザー名に置き換え)
--- GRANT ROLE transformer TO USER dbt_user;
+-- GRANT ROLE TRANSFORMER TO USER dbt_user;
 
 
 -- =====================================================================
@@ -141,26 +141,26 @@ GRANT CREATE VIEW ON SCHEMA analytics.intermediate TO ROLE transformer;
 -- =====================================================================
 
 -- dbt メタデータ用スキーマ（オプション）
-CREATE OR REPLACE SCHEMA analytics.dbt_metadata;
+CREATE OR REPLACE SCHEMA ANALYTICS.DBT_METADATA;
 
 -- テスト結果テーブル
-CREATE OR REPLACE TABLE analytics.dbt_metadata.dbt_test_results (
-    test_name VARCHAR,
-    model_name VARCHAR,
-    test_status VARCHAR,
-    test_timestamp TIMESTAMP,
-    error_message VARCHAR
+CREATE OR REPLACE TABLE ANALYTICS.DBT_METADATA.DBT_TEST_RESULTS (
+    TEST_NAME VARCHAR,
+    MODEL_NAME VARCHAR,
+    TEST_STATUS VARCHAR,
+    TEST_TIMESTAMP TIMESTAMP,
+    ERROR_MESSAGE VARCHAR
 );
 
 -- 実行履歴テーブル
-CREATE OR REPLACE TABLE analytics.dbt_metadata.dbt_execution_log (
-    project_name VARCHAR,
-    execution_id VARCHAR,
-    command VARCHAR,
-    start_time TIMESTAMP,
-    end_time TIMESTAMP,
-    status VARCHAR,
-    rows_affected INTEGER
+CREATE OR REPLACE TABLE ANALYTICS.DBT_METADATA.DBT_EXECUTION_LOG (
+    PROJECT_NAME VARCHAR,
+    EXECUTION_ID VARCHAR,
+    COMMAND VARCHAR,
+    START_TIME TIMESTAMP,
+    END_TIME TIMESTAMP,
+    STATUS VARCHAR,
+    ROWS_AFFECTED INTEGER
 );
 
 
@@ -170,29 +170,29 @@ CREATE OR REPLACE TABLE analytics.dbt_metadata.dbt_execution_log (
 
 -- 全体構成の確認クエリ
 SELECT
-    'Database' AS resource_type,
-    database_name AS resource_name,
-    'ANALYTICS' AS value
-FROM information_schema.databases
-WHERE database_name = 'ANALYTICS'
+    'Database' AS RESOURCE_TYPE,
+    DATABASE_NAME AS RESOURCE_NAME,
+    'ANALYTICS' AS VALUE
+FROM INFORMATION_SCHEMA.DATABASES
+WHERE DATABASE_NAME = 'ANALYTICS'
 
 UNION ALL
 
 SELECT
-    'Warehouse' AS resource_type,
-    warehouse_name AS resource_name,
-    'DBT_WH' AS value
-FROM information_schema.warehouses
-WHERE warehouse_name = 'DBT_WH'
+    'Warehouse' AS RESOURCE_TYPE,
+    WAREHOUSE_NAME AS RESOURCE_NAME,
+    'DBT_WH' AS VALUE
+FROM INFORMATION_SCHEMA.WAREHOUSES
+WHERE WAREHOUSE_NAME = 'DBT_WH'
 
 UNION ALL
 
 SELECT
-    'Role' AS resource_type,
-    role_name AS resource_name,
-    'TRANSFORMER' AS value
-FROM information_schema.applicable_roles
-WHERE role_name = 'TRANSFORMER';
+    'Role' AS RESOURCE_TYPE,
+    ROLE_NAME AS RESOURCE_NAME,
+    'TRANSFORMER' AS VALUE
+FROM INFORMATION_SCHEMA.APPLICABLE_ROLES
+WHERE ROLE_NAME = 'TRANSFORMER';
 
 
 -- =====================================================================
@@ -207,7 +207,7 @@ WHERE role_name = 'TRANSFORMER';
 3. "Develop in Git" を選択
 4. Git リポジトリ URL を入力（このリポジトリ）
 5. 認証を設定
-6. Default Warehouse を dbt_wh に設定
+6. Default Warehouse を DBT_WH に設定
 7. "Create" をクリック
 
 8. プロジェクト内で以下を実行：
@@ -234,27 +234,27 @@ WHERE role_name = 'TRANSFORMER';
 
 DBT PROJECT の実行を Snowflake Task でスケジュール化：
 
-CREATE OR REPLACE TASK analytics.run_dbt_daily
-WAREHOUSE = dbt_wh
+CREATE OR REPLACE TASK ANALYTICS.RUN_DBT_DAILY
+WAREHOUSE = DBT_WH
 SCHEDULE = 'USING CRON 0 1 * * * UTC'
 AS
-EXECUTE DBT PROJECT analytics.my_analytics_project
+EXECUTE DBT PROJECT ANALYTICS.MY_ANALYTICS_PROJECT
 COMMAND = 'dbt run'
 ;
 
-ALTER TASK analytics.run_dbt_daily RESUME;
+ALTER TASK ANALYTICS.RUN_DBT_DAILY RESUME;
 
 【テスト実行タスク】
 
-CREATE OR REPLACE TASK analytics.run_dbt_tests
-WAREHOUSE = dbt_wh
-AFTER analytics.run_dbt_daily
+CREATE OR REPLACE TASK ANALYTICS.RUN_DBT_TESTS
+WAREHOUSE = DBT_WH
+AFTER ANALYTICS.RUN_DBT_DAILY
 AS
-EXECUTE DBT PROJECT analytics.my_analytics_project
+EXECUTE DBT PROJECT ANALYTICS.MY_ANALYTICS_PROJECT
 COMMAND = 'dbt test'
 ;
 
-ALTER TASK analytics.run_dbt_tests RESUME;
+ALTER TASK ANALYTICS.RUN_DBT_TESTS RESUME;
 */
 
 
@@ -296,20 +296,20 @@ ALTER TASK analytics.run_dbt_tests RESUME;
 【よくあるエラーと解決方法】
 
 1. "Database does not exist"
-   → analytics データベースが作成されていることを確認
+   → ANALYTICS データベースが作成されていることを確認
 
 2. "Insufficient privileges"
-   → transformer ロールに必要な権限があることを確認
+   → TRANSFORMER ロールに必要な権限があることを確認
 
 3. "Warehouse does not exist"
-   → dbt_wh ウェアハウスが作成されていることを確認
+   → DBT_WH ウェアハウスが作成されていることを確認
 
 4. "Git authentication failed"
    → GitHub API Integration の設定を確認
 
 5. "Connection timeout"
    → ウェアハウスが一時停止している可能性
-   → ALTER WAREHOUSE dbt_wh RESUME; で再開
+   → ALTER WAREHOUSE DBT_WH RESUME; で再開
 
 【ログ確認】
   Snowflake UI → Admin → Query History で実行ログを確認
@@ -320,7 +320,7 @@ ALTER TASK analytics.run_dbt_tests RESUME;
 -- 最終確認
 -- =====================================================================
 
-SELECT '✓ dbt on Snowflake セットアップ完了' AS message;
+SELECT '✓ dbt on Snowflake セットアップ完了' AS MESSAGE;
 -- 次のステップ：
 --   1. Snowflake UI で DBT PROJECT を作成
 --   2. dbt deps でパッケージをインストール

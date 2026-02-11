@@ -10,7 +10,7 @@ Fact Model: weekly_summary
 【特性】
   - Materialization: TABLE
   - 入力：ref('int_daily_events')（日別集計を週単位に集計）
-  - 出力：weekly_summary テーブル
+  - 出力：WEEKLY_SUMMARY テーブル
 
 【ビジネス要件】
   - 週単位（月曜～日曜）での集計
@@ -19,7 +19,7 @@ Fact Model: weekly_summary
   - トレンド分析向けメトリクス
 
 【出力】
-  analytics.marts.weekly_summary
+  ANALYTICS.MARTS.WEEKLY_SUMMARY
 */
 
 {{ config(
@@ -27,7 +27,7 @@ Fact Model: weekly_summary
     schema='marts',
     tags=['marts', 'weekly'],
     description='週別パフォーマンスサマリー',
-    unique_key=['week_start_date', 'country', 'plan_type'],
+    unique_key=['WEEK_START_DATE', 'COUNTRY', 'PLAN_TYPE'],
 ) }}
 
 WITH daily_events AS (
@@ -37,90 +37,90 @@ WITH daily_events AS (
 weekly_aggregated AS (
     -- ステップ1：日別データを週別に集計
     SELECT
-        DATE_TRUNC('WEEK', event_date) AS week_start_date,
-        DATEADD(day, 6, DATE_TRUNC('WEEK', event_date)) AS week_end_date,
-        DATEDIFF(week, DATE_TRUNC('WEEK', '{{ var("start_date", "2025-01-01") }}'), DATE_TRUNC('WEEK', event_date)) AS week_number,
-        country,
-        plan_type,
+        DATE_TRUNC('WEEK', EVENT_DATE) AS WEEK_START_DATE,
+        DATEADD(day, 6, DATE_TRUNC('WEEK', EVENT_DATE)) AS WEEK_END_DATE,
+        DATEDIFF(week, DATE_TRUNC('WEEK', '{{ var("start_date", "2025-01-01") }}'), DATE_TRUNC('WEEK', EVENT_DATE)) AS WEEK_NUMBER,
+        COUNTRY,
+        PLAN_TYPE,
 
         -- ステップ2：週間メトリクス集計
-        COUNT(DISTINCT event_date) AS active_days,
-        SUM(unique_users) AS total_weekly_users,
-        SUM(unique_sessions) AS total_weekly_sessions,
-        SUM(total_events) AS total_weekly_events,
-        SUM(purchase_events) AS total_weekly_purchases,
-        SUM(acquired_users) AS total_acquired_users,
-        SUM(converted_users) AS total_converted_users,
+        COUNT(DISTINCT EVENT_DATE) AS ACTIVE_DAYS,
+        SUM(UNIQUE_USERS) AS TOTAL_WEEKLY_USERS,
+        SUM(UNIQUE_SESSIONS) AS TOTAL_WEEKLY_SESSIONS,
+        SUM(TOTAL_EVENTS) AS TOTAL_WEEKLY_EVENTS,
+        SUM(PURCHASE_EVENTS) AS TOTAL_WEEKLY_PURCHASES,
+        SUM(ACQUIRED_USERS) AS TOTAL_ACQUIRED_USERS,
+        SUM(CONVERTED_USERS) AS TOTAL_CONVERTED_USERS,
 
         -- ステップ3：平均値計算
-        ROUND(SUM(total_events)::FLOAT / NULLIF(SUM(unique_users), 0), 2) AS avg_events_per_user,
-        ROUND(SUM(purchase_events)::FLOAT / NULLIF(SUM(unique_users), 0), 4) AS purchase_rate,
+        ROUND(SUM(TOTAL_EVENTS)::FLOAT / NULLIF(SUM(UNIQUE_USERS), 0), 2) AS AVG_EVENTS_PER_USER,
+        ROUND(SUM(PURCHASE_EVENTS)::FLOAT / NULLIF(SUM(UNIQUE_USERS), 0), 4) AS PURCHASE_RATE,
 
         -- ステップ4：メタデータ
-        MIN(event_date) AS first_data_date,
-        MAX(event_date) AS last_data_date,
-        CURRENT_TIMESTAMP() AS dbt_created_at
+        MIN(EVENT_DATE) AS FIRST_DATA_DATE,
+        MAX(EVENT_DATE) AS LAST_DATA_DATE,
+        CURRENT_TIMESTAMP() AS DBT_CREATED_AT
     FROM daily_events
     GROUP BY
-        DATE_TRUNC('WEEK', event_date),
-        DATEADD(day, 6, DATE_TRUNC('WEEK', event_date)),
-        DATEDIFF(week, DATE_TRUNC('WEEK', '{{ var("start_date", "2025-01-01") }}'), DATE_TRUNC('WEEK', event_date)),
-        country,
-        plan_type
+        DATE_TRUNC('WEEK', EVENT_DATE),
+        DATEADD(day, 6, DATE_TRUNC('WEEK', EVENT_DATE)),
+        DATEDIFF(week, DATE_TRUNC('WEEK', '{{ var("start_date", "2025-01-01") }}'), DATE_TRUNC('WEEK', EVENT_DATE)),
+        COUNTRY,
+        PLAN_TYPE
 ),
 
 final_metrics AS (
     -- ステップ5：前週比（WoW）計算を可能にする構造を準備
     SELECT
-        week_start_date,
-        week_end_date,
-        week_number,
-        country,
-        plan_type,
-        active_days,
-        total_weekly_users,
-        total_weekly_sessions,
-        total_weekly_events,
-        total_weekly_purchases,
-        total_acquired_users,
-        total_converted_users,
-        avg_events_per_user,
-        purchase_rate,
-        first_data_date,
-        last_data_date,
-        dbt_created_at,
+        WEEK_START_DATE,
+        WEEK_END_DATE,
+        WEEK_NUMBER,
+        COUNTRY,
+        PLAN_TYPE,
+        ACTIVE_DAYS,
+        TOTAL_WEEKLY_USERS,
+        TOTAL_WEEKLY_SESSIONS,
+        TOTAL_WEEKLY_EVENTS,
+        TOTAL_WEEKLY_PURCHASES,
+        TOTAL_ACQUIRED_USERS,
+        TOTAL_CONVERTED_USERS,
+        AVG_EVENTS_PER_USER,
+        PURCHASE_RATE,
+        FIRST_DATA_DATE,
+        LAST_DATA_DATE,
+        DBT_CREATED_AT,
 
         -- ステップ6：Week-over-Week 計算用カラム
-        LAG(total_weekly_users) OVER (PARTITION BY country, plan_type ORDER BY week_start_date) AS prev_week_users,
-        LAG(total_weekly_events) OVER (PARTITION BY country, plan_type ORDER BY week_start_date) AS prev_week_events,
-        LAG(total_weekly_purchases) OVER (PARTITION BY country, plan_type ORDER BY week_start_date) AS prev_week_purchases
+        LAG(TOTAL_WEEKLY_USERS) OVER (PARTITION BY COUNTRY, PLAN_TYPE ORDER BY WEEK_START_DATE) AS PREV_WEEK_USERS,
+        LAG(TOTAL_WEEKLY_EVENTS) OVER (PARTITION BY COUNTRY, PLAN_TYPE ORDER BY WEEK_START_DATE) AS PREV_WEEK_EVENTS,
+        LAG(TOTAL_WEEKLY_PURCHASES) OVER (PARTITION BY COUNTRY, PLAN_TYPE ORDER BY WEEK_START_DATE) AS PREV_WEEK_PURCHASES
     FROM weekly_aggregated
 )
 
 SELECT
-    week_start_date,
-    week_end_date,
-    week_number,
-    country,
-    plan_type,
-    active_days,
-    total_weekly_users,
-    total_weekly_sessions,
-    total_weekly_events,
-    total_weekly_purchases,
-    total_acquired_users,
-    total_converted_users,
-    avg_events_per_user,
-    purchase_rate,
-    first_data_date,
-    last_data_date,
-    dbt_created_at,
-    prev_week_users,
-    prev_week_events,
-    prev_week_purchases,
+    WEEK_START_DATE,
+    WEEK_END_DATE,
+    WEEK_NUMBER,
+    COUNTRY,
+    PLAN_TYPE,
+    ACTIVE_DAYS,
+    TOTAL_WEEKLY_USERS,
+    TOTAL_WEEKLY_SESSIONS,
+    TOTAL_WEEKLY_EVENTS,
+    TOTAL_WEEKLY_PURCHASES,
+    TOTAL_ACQUIRED_USERS,
+    TOTAL_CONVERTED_USERS,
+    AVG_EVENTS_PER_USER,
+    PURCHASE_RATE,
+    FIRST_DATA_DATE,
+    LAST_DATA_DATE,
+    DBT_CREATED_AT,
+    PREV_WEEK_USERS,
+    PREV_WEEK_EVENTS,
+    PREV_WEEK_PURCHASES,
 
     -- ステップ7：WoW 変化率計算
-    ROUND((total_weekly_users - NULLIF(prev_week_users, 0))::FLOAT / NULLIF(prev_week_users, 0), 4) AS wow_user_change,
-    ROUND((total_weekly_events - NULLIF(prev_week_events, 0))::FLOAT / NULLIF(prev_week_events, 0), 4) AS wow_event_change,
-    ROUND((total_weekly_purchases - NULLIF(prev_week_purchases, 0))::FLOAT / NULLIF(prev_week_purchases, 0), 4) AS wow_purchase_change
+    ROUND((TOTAL_WEEKLY_USERS - NULLIF(PREV_WEEK_USERS, 0))::FLOAT / NULLIF(PREV_WEEK_USERS, 0), 4) AS WOW_USER_CHANGE,
+    ROUND((TOTAL_WEEKLY_EVENTS - NULLIF(PREV_WEEK_EVENTS, 0))::FLOAT / NULLIF(PREV_WEEK_EVENTS, 0), 4) AS WOW_EVENT_CHANGE,
+    ROUND((TOTAL_WEEKLY_PURCHASES - NULLIF(PREV_WEEK_PURCHASES, 0))::FLOAT / NULLIF(PREV_WEEK_PURCHASES, 0), 4) AS WOW_PURCHASE_CHANGE
 FROM final_metrics

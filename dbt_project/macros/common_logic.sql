@@ -75,11 +75,11 @@ dbt Macros：共通ロジック集
 -- 【利用】int_daily_events.sql で使用
 
 {% macro event_count_by_type(event_type_col, event_id_col) %}
-    COUNT(DISTINCT CASE WHEN {{ event_type_col }} = 'PAGE_VIEW' THEN {{ event_id_col }} END) AS pageview_events,
-    COUNT(DISTINCT CASE WHEN {{ event_type_col }} = 'CLICK' THEN {{ event_id_col }} END) AS click_events,
-    COUNT(DISTINCT CASE WHEN {{ event_type_col }} = 'ADD_TO_CART' THEN {{ event_id_col }} END) AS add_to_cart_events,
-    COUNT(DISTINCT CASE WHEN {{ event_type_col }} = 'CHECKOUT' THEN {{ event_id_col }} END) AS checkout_events,
-    COUNT(DISTINCT CASE WHEN {{ event_type_col }} = 'PURCHASE' THEN {{ event_id_col }} END) AS purchase_events
+    COUNT(DISTINCT CASE WHEN {{ event_type_col }} = 'PAGE_VIEW' THEN {{ event_id_col }} END) AS PAGEVIEW_EVENTS,
+    COUNT(DISTINCT CASE WHEN {{ event_type_col }} = 'CLICK' THEN {{ event_id_col }} END) AS CLICK_EVENTS,
+    COUNT(DISTINCT CASE WHEN {{ event_type_col }} = 'ADD_TO_CART' THEN {{ event_id_col }} END) AS ADD_TO_CART_EVENTS,
+    COUNT(DISTINCT CASE WHEN {{ event_type_col }} = 'CHECKOUT' THEN {{ event_id_col }} END) AS CHECKOUT_EVENTS,
+    COUNT(DISTINCT CASE WHEN {{ event_type_col }} = 'PURCHASE' THEN {{ event_id_col }} END) AS PURCHASE_EVENTS
 {% endmacro %}
 
 
@@ -137,7 +137,7 @@ dbt Macros：共通ロジック集
 {% macro source_freshness_check(source_name, table_name, max_hours=24) %}
     {%- if execute -%}
         {%- set last_updated = run_query(
-            "SELECT MAX(created_at) FROM " ~ source_name ~ "." ~ table_name
+            "SELECT MAX(CREATED_AT) FROM " ~ source_name ~ "." ~ table_name
         ).columns[0][0] -%}
 
         {%- if last_updated is none or last_updated < (now() - max_hours * 3600) -%}
@@ -175,34 +175,34 @@ dbt Macros：共通ロジック集
 
 WITH events AS (
     SELECT
-        event_id,
-        user_id,
-        event_type,
-        event_timestamp,
-        {{ funnel_stage_generator('event_type') }} AS funnel_stage
+        EVENT_ID,
+        USER_ID,
+        EVENT_TYPE,
+        EVENT_TIMESTAMP,
+        {{ funnel_stage_generator('EVENT_TYPE') }} AS FUNNEL_STAGE
     FROM {{ ref('stg_events') }}
 ),
 
 users AS (
     SELECT
-        user_id,
-        plan_type,
-        is_active,
-        signup_date,
-        {{ user_segment_generator('plan_type', 'is_active') }} AS user_segment,
-        {{ cohort_generator('signup_date') }} AS cohort
+        USER_ID,
+        PLAN_TYPE,
+        IS_ACTIVE,
+        SIGNUP_DATE,
+        {{ user_segment_generator('PLAN_TYPE', 'IS_ACTIVE') }} AS USER_SEGMENT,
+        {{ cohort_generator('SIGNUP_DATE') }} AS COHORT
     FROM {{ ref('stg_users') }}
 ),
 
 aggregated AS (
     SELECT
-        DATE(event_timestamp) AS event_date,
-        COUNT(DISTINCT user_id) AS unique_users,
-        COUNT(event_id) AS total_events,
-        {{ event_count_by_type('event_type', 'event_id') }},
-        {{ conversion_rate_calculator('purchase_events', 'unique_users') }} AS purchase_rate
+        DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+        COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
+        COUNT(EVENT_ID) AS TOTAL_EVENTS,
+        {{ event_count_by_type('EVENT_TYPE', 'EVENT_ID') }},
+        {{ conversion_rate_calculator('PURCHASE_EVENTS', 'UNIQUE_USERS') }} AS PURCHASE_RATE
     FROM events
-    GROUP BY event_date
+    GROUP BY EVENT_DATE
 )
 
 SELECT * FROM aggregated

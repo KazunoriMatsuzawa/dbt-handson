@@ -25,15 +25,15 @@
 
 WITH daily_events AS (
     SELECT
-        DATE(event_timestamp) AS event_date,
-        COUNT(*) AS event_count,
-        COUNT(DISTINCT user_id) AS unique_users
-    FROM raw_events
-    GROUP BY DATE(event_timestamp)
+        DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+        COUNT(*) AS EVENT_COUNT,
+        COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
+    FROM RAW_EVENTS
+    GROUP BY DATE(EVENT_TIMESTAMP)
 )
 SELECT *
 FROM daily_events
-ORDER BY event_date DESC;
+ORDER BY EVENT_DATE DESC;
 
 /*
 【WITH句の構文】
@@ -57,35 +57,35 @@ ORDER BY event_date DESC;
 WITH daily_events AS (
     -- ステップ1：日別のイベント集計
     SELECT
-        DATE(event_timestamp) AS event_date,
-        COUNT(*) AS event_count,
-        COUNT(DISTINCT user_id) AS unique_users
-    FROM raw_events
-    GROUP BY DATE(event_timestamp)
+        DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+        COUNT(*) AS EVENT_COUNT,
+        COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
+    FROM RAW_EVENTS
+    GROUP BY DATE(EVENT_TIMESTAMP)
 ),
 
 daily_purchases AS (
     -- ステップ2：日別の購入イベント集計
     SELECT
-        DATE(event_timestamp) AS event_date,
-        COUNT(*) AS purchase_count,
-        COUNT(DISTINCT user_id) AS purchasing_users
-    FROM raw_events
-    WHERE event_type = 'purchase'
-    GROUP BY DATE(event_timestamp)
+        DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+        COUNT(*) AS PURCHASE_COUNT,
+        COUNT(DISTINCT USER_ID) AS PURCHASING_USERS
+    FROM RAW_EVENTS
+    WHERE EVENT_TYPE = 'purchase'
+    GROUP BY DATE(EVENT_TIMESTAMP)
 )
 
 SELECT
-    e.event_date,
-    e.event_count,
-    e.unique_users,
-    COALESCE(p.purchase_count, 0) AS purchase_count,
-    COALESCE(p.purchasing_users, 0) AS purchasing_users,
-    ROUND(COALESCE(p.purchase_count, 0)::FLOAT / e.event_count, 4) AS purchase_rate
+    e.EVENT_DATE,
+    e.EVENT_COUNT,
+    e.UNIQUE_USERS,
+    COALESCE(p.PURCHASE_COUNT, 0) AS PURCHASE_COUNT,
+    COALESCE(p.PURCHASING_USERS, 0) AS PURCHASING_USERS,
+    ROUND(COALESCE(p.PURCHASE_COUNT, 0)::FLOAT / e.EVENT_COUNT, 4) AS PURCHASE_RATE
 FROM daily_events e
 LEFT JOIN daily_purchases p
-    ON e.event_date = p.event_date
-ORDER BY e.event_date DESC;
+    ON e.EVENT_DATE = p.EVENT_DATE
+ORDER BY e.EVENT_DATE DESC;
 
 /*
 【複数CTE の構造】
@@ -116,13 +116,13 @@ ORDER BY e.event_date DESC;
 
 -- 注：シンプルなRANGE生成の例
 WITH date_range AS (
-    SELECT DATEADD(day, -30, CURRENT_DATE()) AS date_val
+    SELECT DATEADD(day, -30, CURRENT_DATE()) AS DATE_VAL
     UNION ALL
-    SELECT DATEADD(day, 1, date_val)
+    SELECT DATEADD(day, 1, DATE_VAL)
     FROM date_range
-    WHERE date_val < CURRENT_DATE()
+    WHERE DATE_VAL < CURRENT_DATE()
 )
-SELECT date_val
+SELECT DATE_VAL
 FROM date_range
 LIMIT 31;
 
@@ -149,45 +149,45 @@ LIMIT 31;
 
 -- パターン1：サブクエリを使った方法（ネストが深い）
 SELECT
-    main.event_date,
-    main.event_count,
-    rank_cte.rank
+    main.EVENT_DATE,
+    main.EVENT_COUNT,
+    rank_cte.RANK
 FROM (
     SELECT
-        DATE(event_timestamp) AS event_date,
-        COUNT(*) AS event_count
-    FROM raw_events
-    GROUP BY DATE(event_timestamp)
+        DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+        COUNT(*) AS EVENT_COUNT
+    FROM RAW_EVENTS
+    GROUP BY DATE(EVENT_TIMESTAMP)
 ) AS main
 LEFT JOIN (
     SELECT
-        event_date,
-        ROW_NUMBER() OVER (ORDER BY event_count DESC) AS rank
+        EVENT_DATE,
+        ROW_NUMBER() OVER (ORDER BY EVENT_COUNT DESC) AS RANK
     FROM (
         SELECT
-            DATE(event_timestamp) AS event_date,
-            COUNT(*) AS event_count
-        FROM raw_events
-        GROUP BY DATE(event_timestamp)
+            DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+            COUNT(*) AS EVENT_COUNT
+        FROM RAW_EVENTS
+        GROUP BY DATE(EVENT_TIMESTAMP)
     )
 ) AS rank_cte
-ON main.event_date = rank_cte.event_date
-ORDER BY main.event_date DESC;
+ON main.EVENT_DATE = rank_cte.EVENT_DATE
+ORDER BY main.EVENT_DATE DESC;
 
 -- パターン2：CTEを使った方法（可読性が高い）
 WITH daily_events AS (
     SELECT
-        DATE(event_timestamp) AS event_date,
-        COUNT(*) AS event_count
-    FROM raw_events
-    GROUP BY DATE(event_timestamp)
+        DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+        COUNT(*) AS EVENT_COUNT
+    FROM RAW_EVENTS
+    GROUP BY DATE(EVENT_TIMESTAMP)
 )
 SELECT
-    de.event_date,
-    de.event_count,
-    ROW_NUMBER() OVER (ORDER BY de.event_count DESC) AS rank
+    de.EVENT_DATE,
+    de.EVENT_COUNT,
+    ROW_NUMBER() OVER (ORDER BY de.EVENT_COUNT DESC) AS RANK
 FROM daily_events de
-ORDER BY de.event_date DESC;
+ORDER BY de.EVENT_DATE DESC;
 
 /*
 【CTEのメリット（サブクエリ比較）】
@@ -205,42 +205,42 @@ ORDER BY de.event_date DESC;
 WITH user_events AS (
     -- ステップ1：各ユーザーの最初と最後のイベント
     SELECT
-        user_id,
-        MIN(event_timestamp) AS first_event_time,
-        MAX(event_timestamp) AS last_event_time,
-        COUNT(*) AS total_events
-    FROM raw_events
-    GROUP BY user_id
+        USER_ID,
+        MIN(EVENT_TIMESTAMP) AS FIRST_EVENT_TIME,
+        MAX(EVENT_TIMESTAMP) AS LAST_EVENT_TIME,
+        COUNT(*) AS TOTAL_EVENTS
+    FROM RAW_EVENTS
+    GROUP BY USER_ID
 ),
 
 user_conversions AS (
     -- ステップ2：各ユーザーのコンバージョンステップ
     SELECT
-        user_id,
-        COUNT(CASE WHEN event_type = 'page_view' THEN 1 END) > 0 AS viewed_page,
-        COUNT(CASE WHEN event_type = 'add_to_cart' THEN 1 END) > 0 AS added_to_cart,
-        COUNT(CASE WHEN event_type = 'checkout' THEN 1 END) > 0 AS started_checkout,
-        COUNT(CASE WHEN event_type = 'purchase' THEN 1 END) > 0 AS completed_purchase
-    FROM raw_events
-    GROUP BY user_id
+        USER_ID,
+        COUNT(CASE WHEN EVENT_TYPE = 'page_view' THEN 1 END) > 0 AS VIEWED_PAGE,
+        COUNT(CASE WHEN EVENT_TYPE = 'add_to_cart' THEN 1 END) > 0 AS ADDED_TO_CART,
+        COUNT(CASE WHEN EVENT_TYPE = 'checkout' THEN 1 END) > 0 AS STARTED_CHECKOUT,
+        COUNT(CASE WHEN EVENT_TYPE = 'purchase' THEN 1 END) > 0 AS COMPLETED_PURCHASE
+    FROM RAW_EVENTS
+    GROUP BY USER_ID
 )
 
 SELECT
-    ue.total_events,
-    COUNT(*) AS user_count,
-    SUM(CASE WHEN uc.viewed_page THEN 1 ELSE 0 END) AS viewed_page_users,
-    SUM(CASE WHEN uc.added_to_cart THEN 1 ELSE 0 END) AS added_to_cart_users,
-    SUM(CASE WHEN uc.started_checkout THEN 1 ELSE 0 END) AS started_checkout_users,
-    SUM(CASE WHEN uc.completed_purchase THEN 1 ELSE 0 END) AS completed_purchase_users,
+    ue.TOTAL_EVENTS,
+    COUNT(*) AS USER_COUNT,
+    SUM(CASE WHEN uc.VIEWED_PAGE THEN 1 ELSE 0 END) AS VIEWED_PAGE_USERS,
+    SUM(CASE WHEN uc.ADDED_TO_CART THEN 1 ELSE 0 END) AS ADDED_TO_CART_USERS,
+    SUM(CASE WHEN uc.STARTED_CHECKOUT THEN 1 ELSE 0 END) AS STARTED_CHECKOUT_USERS,
+    SUM(CASE WHEN uc.COMPLETED_PURCHASE THEN 1 ELSE 0 END) AS COMPLETED_PURCHASE_USERS,
     ROUND(
-        SUM(CASE WHEN uc.completed_purchase THEN 1 ELSE 0 END)::FLOAT /
+        SUM(CASE WHEN uc.COMPLETED_PURCHASE THEN 1 ELSE 0 END)::FLOAT /
         COUNT(*),
         4
-    ) AS overall_conversion_rate
+    ) AS OVERALL_CONVERSION_RATE
 FROM user_events ue
-INNER JOIN user_conversions uc ON ue.user_id = uc.user_id
-GROUP BY ue.total_events
-ORDER BY ue.total_events;
+INNER JOIN user_conversions uc ON ue.USER_ID = uc.USER_ID
+GROUP BY ue.TOTAL_EVENTS
+ORDER BY ue.TOTAL_EVENTS;
 
 /*
 このクエリの流れ：
@@ -260,41 +260,41 @@ ORDER BY ue.total_events;
 
 WITH event_summary AS (
     SELECT
-        e.user_id,
-        COUNT(*) AS event_count,
-        COUNT(DISTINCT e.session_id) AS session_count,
-        MAX(e.event_timestamp) AS last_event
-    FROM raw_events e
-    GROUP BY e.user_id
+        e.USER_ID,
+        COUNT(*) AS EVENT_COUNT,
+        COUNT(DISTINCT e.SESSION_ID) AS SESSION_COUNT,
+        MAX(e.EVENT_TIMESTAMP) AS LAST_EVENT
+    FROM RAW_EVENTS e
+    GROUP BY e.USER_ID
 ),
 
 user_info AS (
     SELECT
-        user_id,
-        country,
-        plan_type,
-        is_active
-    FROM users
+        USER_ID,
+        COUNTRY,
+        PLAN_TYPE,
+        IS_ACTIVE
+    FROM USERS
 )
 
 SELECT
-    ui.user_id,
-    ui.country,
-    ui.plan_type,
-    ui.is_active,
-    es.event_count,
-    es.session_count,
-    es.last_event,
+    ui.USER_ID,
+    ui.COUNTRY,
+    ui.PLAN_TYPE,
+    ui.IS_ACTIVE,
+    es.EVENT_COUNT,
+    es.SESSION_COUNT,
+    es.LAST_EVENT,
     CASE
-        WHEN es.last_event IS NULL THEN 'Never Active'
-        WHEN es.last_event < DATEADD(day, -30, CURRENT_DATE()) THEN 'Churned'
-        WHEN es.last_event < DATEADD(day, -7, CURRENT_DATE()) THEN 'Inactive'
+        WHEN es.LAST_EVENT IS NULL THEN 'Never Active'
+        WHEN es.LAST_EVENT < DATEADD(day, -30, CURRENT_DATE()) THEN 'Churned'
+        WHEN es.LAST_EVENT < DATEADD(day, -7, CURRENT_DATE()) THEN 'Inactive'
         ELSE 'Active'
-    END AS status
+    END AS STATUS
 FROM user_info ui
-LEFT JOIN event_summary es ON ui.user_id = es.user_id
-WHERE ui.is_active = TRUE
-ORDER BY es.event_count DESC NULLS LAST;
+LEFT JOIN event_summary es ON ui.USER_ID = es.USER_ID
+WHERE ui.IS_ACTIVE = TRUE
+ORDER BY es.EVENT_COUNT DESC NULLS LAST;
 
 /*
 【CTE + JOIN の利点】
@@ -315,48 +315,48 @@ ORDER BY es.event_count DESC NULLS LAST;
 
 WITH daily_performance AS (
     SELECT
-        DATE(e.event_timestamp) AS event_date,
-        u.country,
-        u.plan_type,
-        COUNT(*) AS event_count,
-        COUNT(DISTINCT e.user_id) AS user_count,
-        COUNT(DISTINCT CASE WHEN e.event_type = 'purchase' THEN e.event_id END) AS purchase_count
-    FROM raw_events e
-    INNER JOIN users u ON e.user_id = u.user_id
-    WHERE e.event_timestamp >= DATEADD(day, -30, CURRENT_DATE())
-    GROUP BY DATE(e.event_timestamp), u.country, u.plan_type
+        DATE(e.EVENT_TIMESTAMP) AS EVENT_DATE,
+        u.COUNTRY,
+        u.PLAN_TYPE,
+        COUNT(*) AS EVENT_COUNT,
+        COUNT(DISTINCT e.USER_ID) AS USER_COUNT,
+        COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END) AS PURCHASE_COUNT
+    FROM RAW_EVENTS e
+    INNER JOIN USERS u ON e.USER_ID = u.USER_ID
+    WHERE e.EVENT_TIMESTAMP >= DATEADD(day, -30, CURRENT_DATE())
+    GROUP BY DATE(e.EVENT_TIMESTAMP), u.COUNTRY, u.PLAN_TYPE
 ),
 
 performance_with_metrics AS (
     SELECT
-        event_date,
-        country,
-        plan_type,
-        event_count,
-        user_count,
-        purchase_count,
-        ROUND(event_count::FLOAT / user_count, 2) AS events_per_user,
-        ROUND(purchase_count::FLOAT / user_count, 4) AS purchase_rate,
+        EVENT_DATE,
+        COUNTRY,
+        PLAN_TYPE,
+        EVENT_COUNT,
+        USER_COUNT,
+        PURCHASE_COUNT,
+        ROUND(EVENT_COUNT::FLOAT / USER_COUNT, 2) AS EVENTS_PER_USER,
+        ROUND(PURCHASE_COUNT::FLOAT / USER_COUNT, 4) AS PURCHASE_RATE,
         CASE
-            WHEN ROUND(purchase_count::FLOAT / user_count, 4) >= 0.05 THEN 'High'
-            WHEN ROUND(purchase_count::FLOAT / user_count, 4) >= 0.02 THEN 'Medium'
+            WHEN ROUND(PURCHASE_COUNT::FLOAT / USER_COUNT, 4) >= 0.05 THEN 'High'
+            WHEN ROUND(PURCHASE_COUNT::FLOAT / USER_COUNT, 4) >= 0.02 THEN 'Medium'
             ELSE 'Low'
-        END AS conversion_tier
+        END AS CONVERSION_TIER
     FROM daily_performance
 )
 
 SELECT
-    event_date,
-    country,
-    plan_type,
-    event_count,
-    user_count,
-    purchase_count,
-    events_per_user,
-    purchase_rate,
-    conversion_tier
+    EVENT_DATE,
+    COUNTRY,
+    PLAN_TYPE,
+    EVENT_COUNT,
+    USER_COUNT,
+    PURCHASE_COUNT,
+    EVENTS_PER_USER,
+    PURCHASE_RATE,
+    CONVERSION_TIER
 FROM performance_with_metrics
-ORDER BY event_date DESC, purchase_rate DESC;
+ORDER BY EVENT_DATE DESC, PURCHASE_RATE DESC;
 
 /*
 このクエリの3段階：
@@ -377,21 +377,21 @@ ORDER BY event_date DESC, purchase_rate DESC;
 
 WITH sample_data AS (
     SELECT
-        event_id,
-        user_id,
-        event_type,
-        event_timestamp
-    FROM raw_events
-    WHERE DATE(event_timestamp) = CURRENT_DATE()
+        EVENT_ID,
+        USER_ID,
+        EVENT_TYPE,
+        EVENT_TIMESTAMP
+    FROM RAW_EVENTS
+    WHERE DATE(EVENT_TIMESTAMP) = CURRENT_DATE()
     LIMIT 100
 )
 
 SELECT
-    COUNT(*) AS total_records,
-    COUNT(DISTINCT user_id) AS unique_users,
-    COUNT(DISTINCT event_type) AS event_types,
-    MIN(event_timestamp) AS earliest,
-    MAX(event_timestamp) AS latest
+    COUNT(*) AS TOTAL_RECORDS,
+    COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
+    COUNT(DISTINCT EVENT_TYPE) AS EVENT_TYPES,
+    MIN(EVENT_TIMESTAMP) AS EARLIEST,
+    MAX(EVENT_TIMESTAMP) AS LATEST
 FROM sample_data;
 
 /*
@@ -440,49 +440,49 @@ FROM sample_data;
 WITH filtered_events AS (
     -- ステップ1：対象データを抽出
     SELECT
-        event_id,
-        user_id,
-        session_id,
-        event_type,
-        event_timestamp,
-        device_type
-    FROM raw_events
-    WHERE event_timestamp >= DATEADD(day, -30, CURRENT_DATE())
+        EVENT_ID,
+        USER_ID,
+        SESSION_ID,
+        EVENT_TYPE,
+        EVENT_TIMESTAMP,
+        DEVICE_TYPE
+    FROM RAW_EVENTS
+    WHERE EVENT_TIMESTAMP >= DATEADD(day, -30, CURRENT_DATE())
 ),
 
 event_summary AS (
     -- ステップ2：集計
     SELECT
-        DATE(fe.event_timestamp) AS event_date,
-        COUNT(*) AS event_count,
-        COUNT(DISTINCT fe.user_id) AS unique_users
+        DATE(fe.EVENT_TIMESTAMP) AS EVENT_DATE,
+        COUNT(*) AS EVENT_COUNT,
+        COUNT(DISTINCT fe.USER_ID) AS UNIQUE_USERS
     FROM filtered_events fe
-    GROUP BY DATE(fe.event_timestamp)
+    GROUP BY DATE(fe.EVENT_TIMESTAMP)
 ),
 
 user_attributes AS (
     -- ステップ3：ユーザー属性を追加
     SELECT
-        fe.event_date,
-        u.country,
-        u.plan_type,
-        COUNT(fe.event_id) AS event_count,
-        COUNT(DISTINCT fe.user_id) AS user_count
+        fe.EVENT_DATE,
+        u.COUNTRY,
+        u.PLAN_TYPE,
+        COUNT(fe.EVENT_ID) AS EVENT_COUNT,
+        COUNT(DISTINCT fe.USER_ID) AS USER_COUNT
     FROM filtered_events fe
-    INNER JOIN users u ON fe.user_id = u.user_id
-    GROUP BY fe.event_date, u.country, u.plan_type
+    INNER JOIN USERS u ON fe.USER_ID = u.USER_ID
+    GROUP BY fe.EVENT_DATE, u.COUNTRY, u.PLAN_TYPE
 )
 
 -- ステップ4：最終レポート
 SELECT
-    event_date,
-    country,
-    plan_type,
-    event_count,
-    user_count,
-    ROUND(event_count::FLOAT / user_count, 2) AS avg_events_per_user
+    EVENT_DATE,
+    COUNTRY,
+    PLAN_TYPE,
+    EVENT_COUNT,
+    USER_COUNT,
+    ROUND(EVENT_COUNT::FLOAT / USER_COUNT, 2) AS AVG_EVENTS_PER_USER
 FROM user_attributes
-ORDER BY event_date DESC, event_count DESC;
+ORDER BY EVENT_DATE DESC, EVENT_COUNT DESC;
 
 /*
 このテンプレート構造：

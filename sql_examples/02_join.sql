@@ -14,40 +14,40 @@
   - 結合後のフィルタリング
 
 【実務での応用】
-  - イベントログ（raw_events）とユーザー情報（users）の結合
-  - セッション情報（sessions）とユーザー属性の組み合わせ
+  - イベントログ（RAW_EVENTS）とユーザー情報（USERS）の結合
+  - セッション情報（SESSIONS）とユーザー属性の組み合わせ
   - 多段階の結合（chained joins）
 */
 
 -- =====================================================================
--- INNER JOIN1：raw_events と users を結合
+-- INNER JOIN1：RAW_EVENTS と USERS を結合
 -- =====================================================================
 
 SELECT
-    e.event_id,
-    e.user_id,
-    e.event_type,
-    e.event_timestamp,
-    u.signup_date,
-    u.country,
-    u.plan_type,
-    u.is_active
-FROM raw_events e
-INNER JOIN users u
-    ON e.user_id = u.user_id
+    e.EVENT_ID,
+    e.USER_ID,
+    e.EVENT_TYPE,
+    e.EVENT_TIMESTAMP,
+    u.SIGNUP_DATE,
+    u.COUNTRY,
+    u.PLAN_TYPE,
+    u.IS_ACTIVE
+FROM RAW_EVENTS e
+INNER JOIN USERS u
+    ON e.USER_ID = u.USER_ID
 LIMIT 20;
 
 /*
 【INNER JOIN の動作】
-  raw_events と users テーブルを user_id で結合
-  両テーブルに存在するuser_idのレコードのみが結果に含まれます
+  RAW_EVENTS と USERS テーブルを USER_ID で結合
+  両テーブルに存在するUSER_IDのレコードのみが結果に含まれます
 
 実行結果：
   イベント情報 + ユーザー属性を1行で確認できます
 
 【テーブルエイリアスの使用】
-  FROM raw_events e
-  INNER JOIN users u
+  FROM RAW_EVENTS e
+  INNER JOIN USERS u
 
   エイリアス（e, u）を使うことで：
   - クエリが短く、読みやすくなる
@@ -61,19 +61,19 @@ LIMIT 20;
 -- =====================================================================
 
 SELECT
-    e.event_id,
-    e.user_id,
-    e.event_type,
-    e.event_timestamp,
-    u.plan_type,
-    u.country
-FROM raw_events e
-INNER JOIN users u
-    ON e.user_id = u.user_id
-WHERE u.plan_type = 'premium'
-  AND e.event_type = 'purchase'
-  AND e.country = 'US'
-ORDER BY e.event_timestamp DESC
+    e.EVENT_ID,
+    e.USER_ID,
+    e.EVENT_TYPE,
+    e.EVENT_TIMESTAMP,
+    u.PLAN_TYPE,
+    u.COUNTRY
+FROM RAW_EVENTS e
+INNER JOIN USERS u
+    ON e.USER_ID = u.USER_ID
+WHERE u.PLAN_TYPE = 'premium'
+  AND e.EVENT_TYPE = 'purchase'
+  AND e.COUNTRY = 'US'
+ORDER BY e.EVENT_TIMESTAMP DESC
 LIMIT 20;
 
 /*
@@ -90,29 +90,29 @@ LIMIT 20;
 
 
 -- =====================================================================
--- LEFT JOIN1：raw_events と users を左結合
+-- LEFT JOIN1：RAW_EVENTS と USERS を左結合
 -- =====================================================================
 
 SELECT
-    e.event_id,
-    e.user_id,
-    e.event_type,
-    e.event_timestamp,
-    u.signup_date,
-    u.plan_type
-FROM raw_events e
-LEFT JOIN users u
-    ON e.user_id = u.user_id
+    e.EVENT_ID,
+    e.USER_ID,
+    e.EVENT_TYPE,
+    e.EVENT_TIMESTAMP,
+    u.SIGNUP_DATE,
+    u.PLAN_TYPE
+FROM RAW_EVENTS e
+LEFT JOIN USERS u
+    ON e.USER_ID = u.USER_ID
 LIMIT 20;
 
 /*
 【LEFT JOIN の動作】
-  左テーブル（raw_events）の全レコードが結果に含まれます
-  右テーブル（users）でマッチしないレコードはNULLになります
+  左テーブル（RAW_EVENTS）の全レコードが結果に含まれます
+  右テーブル（USERS）でマッチしないレコードはNULLになります
 
 実務での応用：
-  - イベントログには存在するが、ユーザー情報には存在しないuser_id
-  - データ品質チェック：不正なuser_idの検出
+  - イベントログには存在するが、ユーザー情報には存在しないUSER_ID
+  - データ品質チェック：不正なUSER_IDの検出
 */
 
 
@@ -121,21 +121,21 @@ LIMIT 20;
 -- =====================================================================
 
 SELECT
-    e.event_id,
-    e.user_id,
-    e.event_type,
-    u.user_id AS user_id_matched,
-    u.plan_type,
-    u.is_active
-FROM raw_events e
-LEFT JOIN users u
-    ON e.user_id = u.user_id
-WHERE u.user_id IS NULL
+    e.EVENT_ID,
+    e.USER_ID,
+    e.EVENT_TYPE,
+    u.USER_ID AS USER_ID_MATCHED,
+    u.PLAN_TYPE,
+    u.IS_ACTIVE
+FROM RAW_EVENTS e
+LEFT JOIN USERS u
+    ON e.USER_ID = u.USER_ID
+WHERE u.USER_ID IS NULL
 LIMIT 20;
 
 /*
 実行結果：
-users テーブルに存在しないuser_idを検出できます
+USERS テーブルに存在しないUSER_IDを検出できます
 
 実務での応用：
   - データ品質チェック：孤立レコード（orphaned records）の検出
@@ -148,21 +148,21 @@ users テーブルに存在しないuser_idを検出できます
 -- =====================================================================
 
 -- パターン1：INNER JOINの件数
-SELECT COUNT(*) AS inner_join_count
-FROM raw_events e
-INNER JOIN users u
-    ON e.user_id = u.user_id;
+SELECT COUNT(*) AS INNER_JOIN_COUNT
+FROM RAW_EVENTS e
+INNER JOIN USERS u
+    ON e.USER_ID = u.USER_ID;
 
 -- パターン2：LEFT JOINの件数
-SELECT COUNT(*) AS left_join_count
-FROM raw_events e
-LEFT JOIN users u
-    ON e.user_id = u.user_id;
+SELECT COUNT(*) AS LEFT_JOIN_COUNT
+FROM RAW_EVENTS e
+LEFT JOIN USERS u
+    ON e.USER_ID = u.USER_ID;
 
 /*
 結果の解釈：
-  inner_join_count < left_join_count の場合、
-  raw_eventsに存在するが、usersに存在しないuser_idが存在
+  INNER_JOIN_COUNT < LEFT_JOIN_COUNT の場合、
+  RAW_EVENTSに存在するが、USERSに存在しないUSER_IDが存在
 
 実務での応用：
   - データ検証：テーブル間の整合性確認
@@ -171,31 +171,31 @@ LEFT JOIN users u
 
 
 -- =====================================================================
--- 複数テーブルの結合：raw_events + sessions + users
+-- 複数テーブルの結合：RAW_EVENTS + SESSIONS + USERS
 -- =====================================================================
 
 SELECT
-    e.event_id,
-    e.user_id,
-    e.session_id,
-    e.event_type,
-    e.event_timestamp,
-    s.session_start,
-    s.session_end,
-    s.page_views,
-    u.signup_date,
-    u.plan_type
-FROM raw_events e
-INNER JOIN sessions s
-    ON e.session_id = s.session_id
-INNER JOIN users u
-    ON e.user_id = u.user_id
+    e.EVENT_ID,
+    e.USER_ID,
+    e.SESSION_ID,
+    e.EVENT_TYPE,
+    e.EVENT_TIMESTAMP,
+    s.SESSION_START,
+    s.SESSION_END,
+    s.PAGE_VIEWS,
+    u.SIGNUP_DATE,
+    u.PLAN_TYPE
+FROM RAW_EVENTS e
+INNER JOIN SESSIONS s
+    ON e.SESSION_ID = s.SESSION_ID
+INNER JOIN USERS u
+    ON e.USER_ID = u.USER_ID
 LIMIT 20;
 
 /*
 【複数JOIN の実行順序】
-  1. raw_events と sessions を session_id で結合
-  2. 結果 と users を user_id で結合
+  1. RAW_EVENTS と SESSIONS を SESSION_ID で結合
+  2. 結果 と USERS を USER_ID で結合
 
 【注意点】
   結合順序はパフォーマンスに影響
@@ -210,10 +210,10 @@ LIMIT 20;
 -- ❌ アンチパターン：結合条件が不足
 /*
 SELECT *
-FROM raw_events e
-JOIN users u ON e.user_id = u.user_id
-JOIN sessions s ON e.user_id = s.user_id
-  -- ❌ 問題：e.session_id と s.session_id の関連性を確認していない
+FROM RAW_EVENTS e
+JOIN USERS u ON e.USER_ID = u.USER_ID
+JOIN SESSIONS s ON e.USER_ID = s.USER_ID
+  -- ❌ 問題：e.SESSION_ID と s.SESSION_ID の関連性を確認していない
 
 このクエリは論理的には正しいですが、
 セッションIDとユーザーIDが一対一でない場合、
@@ -222,12 +222,12 @@ JOIN sessions s ON e.user_id = s.user_id
 
 -- ✓ 正しい方法
 SELECT *
-FROM raw_events e
-INNER JOIN sessions s
-    ON e.session_id = s.session_id
-    AND e.user_id = s.user_id  -- 複合キー
-INNER JOIN users u
-    ON e.user_id = u.user_id
+FROM RAW_EVENTS e
+INNER JOIN SESSIONS s
+    ON e.SESSION_ID = s.SESSION_ID
+    AND e.USER_ID = s.USER_ID  -- 複合キー
+INNER JOIN USERS u
+    ON e.USER_ID = u.USER_ID
 LIMIT 20;
 
 /*
@@ -242,15 +242,15 @@ LIMIT 20;
 -- =====================================================================
 
 SELECT
-    u.country,
-    COUNT(e.event_id) AS total_events,
-    COUNT(DISTINCT e.user_id) AS unique_users,
-    COUNT(DISTINCT e.session_id) AS unique_sessions
-FROM raw_events e
-INNER JOIN users u
-    ON e.user_id = u.user_id
-GROUP BY u.country
-ORDER BY total_events DESC;
+    u.COUNTRY,
+    COUNT(e.EVENT_ID) AS TOTAL_EVENTS,
+    COUNT(DISTINCT e.USER_ID) AS UNIQUE_USERS,
+    COUNT(DISTINCT e.SESSION_ID) AS UNIQUE_SESSIONS
+FROM RAW_EVENTS e
+INNER JOIN USERS u
+    ON e.USER_ID = u.USER_ID
+GROUP BY u.COUNTRY
+ORDER BY TOTAL_EVENTS DESC;
 
 /*
 実行結果：
@@ -272,17 +272,17 @@ ORDER BY total_events DESC;
 -- =====================================================================
 
 SELECT
-    u.plan_type,
-    COUNT(DISTINCT e.user_id) AS user_count,
-    COUNT(e.event_id) AS event_count,
-    ROUND(COUNT(e.event_id)::FLOAT / COUNT(DISTINCT e.user_id), 2) AS avg_events_per_user,
-    ROUND(COUNT(DISTINCT CASE WHEN e.event_type = 'purchase' THEN e.event_id END)::FLOAT /
-          COUNT(DISTINCT e.user_id), 4) AS purchase_conversion_rate
-FROM raw_events e
-INNER JOIN users u
-    ON e.user_id = u.user_id
-GROUP BY u.plan_type
-ORDER BY event_count DESC;
+    u.PLAN_TYPE,
+    COUNT(DISTINCT e.USER_ID) AS USER_COUNT,
+    COUNT(e.EVENT_ID) AS EVENT_COUNT,
+    ROUND(COUNT(e.EVENT_ID)::FLOAT / COUNT(DISTINCT e.USER_ID), 2) AS AVG_EVENTS_PER_USER,
+    ROUND(COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END)::FLOAT /
+          COUNT(DISTINCT e.USER_ID), 4) AS PURCHASE_CONVERSION_RATE
+FROM RAW_EVENTS e
+INNER JOIN USERS u
+    ON e.USER_ID = u.USER_ID
+GROUP BY u.PLAN_TYPE
+ORDER BY EVENT_COUNT DESC;
 
 /*
 このクエリは以下の分析を実施：
@@ -302,20 +302,20 @@ ORDER BY event_count DESC;
 -- =====================================================================
 
 SELECT
-    e.event_id,
-    e.user_id,
-    u.user_id AS user_id_matched,
-    u.plan_type
-FROM raw_events e
-RIGHT JOIN users u
-    ON e.user_id = u.user_id
-WHERE e.event_id IS NULL
+    e.EVENT_ID,
+    e.USER_ID,
+    u.USER_ID AS USER_ID_MATCHED,
+    u.PLAN_TYPE
+FROM RAW_EVENTS e
+RIGHT JOIN USERS u
+    ON e.USER_ID = u.USER_ID
+WHERE e.EVENT_ID IS NULL
 LIMIT 20;
 
 /*
 【RIGHT JOINの説明】
-  右テーブル（users）の全レコードが結果に含まれます
-  左テーブル（raw_events）でマッチしないレコードはNULLになります
+  右テーブル（USERS）の全レコードが結果に含まれます
+  左テーブル（RAW_EVENTS）でマッチしないレコードはNULLになります
 
 実務での応用：
   - ユーザーマスタに存在するが、イベントログにない（非アクティブ）ユーザーの検出
@@ -330,17 +330,17 @@ LIMIT 20;
 
 -- 注：Snowflakeでは FULL OUTER JOIN が直接サポートされています
 SELECT
-    e.event_id,
-    e.user_id AS event_user_id,
-    u.user_id AS user_table_user_id,
+    e.EVENT_ID,
+    e.USER_ID AS EVENT_USER_ID,
+    u.USER_ID AS USER_TABLE_USER_ID,
     CASE
-        WHEN e.user_id IS NULL THEN 'Users only'
-        WHEN u.user_id IS NULL THEN 'Events only'
+        WHEN e.USER_ID IS NULL THEN 'Users only'
+        WHEN u.USER_ID IS NULL THEN 'Events only'
         ELSE 'Both tables'
-    END AS match_status
-FROM raw_events e
-FULL OUTER JOIN users u
-    ON e.user_id = u.user_id
+    END AS MATCH_STATUS
+FROM RAW_EVENTS e
+FULL OUTER JOIN USERS u
+    ON e.USER_ID = u.USER_ID
 LIMIT 20;
 
 /*
@@ -363,14 +363,14 @@ LIMIT 20;
 注意：CROSS JOINは実務ではほぼ使用しません
 
 SELECT
-    u.user_id,
-    e.event_type
-FROM users u
-CROSS JOIN (SELECT DISTINCT event_type FROM raw_events) e
+    u.USER_ID,
+    e.EVENT_TYPE
+FROM USERS u
+CROSS JOIN (SELECT DISTINCT EVENT_TYPE FROM RAW_EVENTS) e
 LIMIT 20;
 
 このクエリは：
-  users（1万件）× 6イベント種別 = 6万件のレコードを生成
+  USERS（1万件）× 6イベント種別 = 6万件のレコードを生成
 
 実務での応用（稀）：
   - すべてのユーザーとすべてのイベント種別の組み合わせ
@@ -383,15 +383,15 @@ LIMIT 20;
 -- =====================================================================
 
 SELECT
-    e1.user_id,
-    e1.event_timestamp AS first_event,
-    e2.event_timestamp AS second_event,
-    DATEDIFF(second, e1.event_timestamp, e2.event_timestamp) AS seconds_between
-FROM raw_events e1
-INNER JOIN raw_events e2
-    ON e1.user_id = e2.user_id
-    AND e1.event_id < e2.event_id  -- 自分より前のイベントのみ
-WHERE e1.event_timestamp >= DATEADD(day, -7, CURRENT_DATE())
+    e1.USER_ID,
+    e1.EVENT_TIMESTAMP AS FIRST_EVENT,
+    e2.EVENT_TIMESTAMP AS SECOND_EVENT,
+    DATEDIFF(second, e1.EVENT_TIMESTAMP, e2.EVENT_TIMESTAMP) AS SECONDS_BETWEEN
+FROM RAW_EVENTS e1
+INNER JOIN RAW_EVENTS e2
+    ON e1.USER_ID = e2.USER_ID
+    AND e1.EVENT_ID < e2.EVENT_ID  -- 自分より前のイベントのみ
+WHERE e1.EVENT_TIMESTAMP >= DATEADD(day, -7, CURRENT_DATE())
 LIMIT 20;
 
 /*
@@ -400,7 +400,7 @@ LIMIT 20;
 
 実務での応用：
   - ユーザーの連続イベント分析
-  - 時系列でのパターン検出（e1.event_timestamp < e2.event_timestamp）
+  - 時系列でのパターン検出（e1.EVENT_TIMESTAMP < e2.EVENT_TIMESTAMP）
 */
 
 
@@ -411,13 +411,13 @@ LIMIT 20;
 /*
 【推奨】
 1. テーブルエイリアスを常に使用
-   FROM raw_events e INNER JOIN users u ON e.user_id = u.user_id
+   FROM RAW_EVENTS e INNER JOIN USERS u ON e.USER_ID = u.USER_ID
 
 2. ON句は結合前の行数削減に活用
-   ON e.user_id = u.user_id AND u.is_active = TRUE
+   ON e.USER_ID = u.USER_ID AND u.IS_ACTIVE = TRUE
 
 3. WHERE句は結合後のフィルタに使用
-   WHERE e.event_timestamp >= '2025-12-01'
+   WHERE e.EVENT_TIMESTAMP >= '2025-12-01'
 
 4. 複合キーでの結合を慎重に設計
    確認：各テーブルの主キー、外部キー制約
@@ -435,18 +435,18 @@ LIMIT 20;
 -- =====================================================================
 
 SELECT
-    DATE(e.event_timestamp) AS event_date,
-    u.country,
-    u.plan_type,
-    COUNT(DISTINCT e.user_id) AS active_users,
-    COUNT(e.event_id) AS event_count,
-    COUNT(DISTINCT CASE WHEN e.event_type = 'purchase' THEN e.event_id END) AS purchases
-FROM raw_events e
-INNER JOIN users u
-    ON e.user_id = u.user_id
-WHERE e.event_timestamp >= DATEADD(day, -7, CURRENT_DATE())
-GROUP BY DATE(e.event_timestamp), u.country, u.plan_type
-ORDER BY event_date DESC, event_count DESC;
+    DATE(e.EVENT_TIMESTAMP) AS EVENT_DATE,
+    u.COUNTRY,
+    u.PLAN_TYPE,
+    COUNT(DISTINCT e.USER_ID) AS ACTIVE_USERS,
+    COUNT(e.EVENT_ID) AS EVENT_COUNT,
+    COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END) AS PURCHASES
+FROM RAW_EVENTS e
+INNER JOIN USERS u
+    ON e.USER_ID = u.USER_ID
+WHERE e.EVENT_TIMESTAMP >= DATEADD(day, -7, CURRENT_DATE())
+GROUP BY DATE(e.EVENT_TIMESTAMP), u.COUNTRY, u.PLAN_TYPE
+ORDER BY EVENT_DATE DESC, EVENT_COUNT DESC;
 
 /*
 このクエリは実務で頻繁に使用される形式です：

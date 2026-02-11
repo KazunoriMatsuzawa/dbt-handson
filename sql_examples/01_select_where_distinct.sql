@@ -23,7 +23,7 @@
 -- 基本1：全データの確認（最初の10行）
 -- =====================================================================
 
-SELECT * FROM raw_events LIMIT 10;
+SELECT * FROM RAW_EVENTS LIMIT 10;
 
 /*
 期待される出力（例）：
@@ -43,12 +43,12 @@ SELECT * FROM raw_events LIMIT 10;
 -- =====================================================================
 
 SELECT
-    event_id,
-    user_id,
-    event_type,
-    event_timestamp,
-    device_type
-FROM raw_events
+    EVENT_ID,
+    USER_ID,
+    EVENT_TYPE,
+    EVENT_TIMESTAMP,
+    DEVICE_TYPE
+FROM RAW_EVENTS
 LIMIT 10;
 
 /*
@@ -61,7 +61,7 @@ LIMIT 10;
   - SELECT *の方が簡潔に見えるかもしれない（実務では非推奨）
 
 【アンチパターン】
-  SELECT * FROM raw_events;
+  SELECT * FROM RAW_EVENTS;
   ❌ 理由：不要なカラムまで取得し、パフォーマンスが悪化
   ✓ 改善：必要なカラムのみ指定する
 */
@@ -72,18 +72,18 @@ LIMIT 10;
 -- =====================================================================
 
 SELECT
-    event_id,
-    user_id,
-    event_type,
-    page_url,
-    event_timestamp
-FROM raw_events
-WHERE event_type = 'purchase'
+    EVENT_ID,
+    USER_ID,
+    EVENT_TYPE,
+    PAGE_URL,
+    EVENT_TIMESTAMP
+FROM RAW_EVENTS
+WHERE EVENT_TYPE = 'purchase'
 LIMIT 20;
 
 /*
 実行結果：
-購入イベント（event_type = 'purchase'）のみ表示されます。
+購入イベント（EVENT_TYPE = 'purchase'）のみ表示されます。
 これで、購入に至ったユーザーの行動を分析できます。
 */
 
@@ -93,23 +93,23 @@ LIMIT 20;
 -- =====================================================================
 
 SELECT
-    event_id,
-    user_id,
-    event_type,
-    device_type,
-    country,
-    event_timestamp
-FROM raw_events
-WHERE event_type = 'purchase'
-  AND device_type = 'mobile'
-  AND country = 'US'
+    EVENT_ID,
+    USER_ID,
+    EVENT_TYPE,
+    DEVICE_TYPE,
+    COUNTRY,
+    EVENT_TIMESTAMP
+FROM RAW_EVENTS
+WHERE EVENT_TYPE = 'purchase'
+  AND DEVICE_TYPE = 'mobile'
+  AND COUNTRY = 'US'
 LIMIT 20;
 
 /*
 【条件の解釈】
-  - event_type = 'purchase' : 購入イベント
-  - device_type = 'mobile' : モバイルデバイス
-  - country = 'US' : アメリカのユーザー
+  - EVENT_TYPE = 'purchase' : 購入イベント
+  - DEVICE_TYPE = 'mobile' : モバイルデバイス
+  - COUNTRY = 'US' : アメリカのユーザー
 
 実務での応用例：
   - US、モバイルユーザーの購入行動分析
@@ -122,14 +122,14 @@ LIMIT 20;
 -- =====================================================================
 
 SELECT
-    event_id,
-    user_id,
-    event_type,
-    device_type,
-    event_timestamp
-FROM raw_events
-WHERE (event_type = 'purchase' OR event_type = 'checkout')
-  AND (device_type = 'mobile' OR device_type = 'tablet')
+    EVENT_ID,
+    USER_ID,
+    EVENT_TYPE,
+    DEVICE_TYPE,
+    EVENT_TIMESTAMP
+FROM RAW_EVENTS
+WHERE (EVENT_TYPE = 'purchase' OR EVENT_TYPE = 'checkout')
+  AND (DEVICE_TYPE = 'mobile' OR DEVICE_TYPE = 'tablet')
 LIMIT 20;
 
 /*
@@ -147,14 +147,14 @@ LIMIT 20;
 -- =====================================================================
 
 SELECT
-    event_id,
-    user_id,
-    event_type,
-    country,
-    event_timestamp
-FROM raw_events
-WHERE country IN ('US', 'JP', 'GB')
-  AND event_type IN ('purchase', 'sign_up')
+    EVENT_ID,
+    USER_ID,
+    EVENT_TYPE,
+    COUNTRY,
+    EVENT_TIMESTAMP
+FROM RAW_EVENTS
+WHERE COUNTRY IN ('US', 'JP', 'GB')
+  AND EVENT_TYPE IN ('purchase', 'sign_up')
 LIMIT 20;
 
 /*
@@ -162,8 +162,8 @@ LIMIT 20;
   OR演算子の繰り返しより簡潔で読みやすい
 
 比較：
-  ❌ WHERE country = 'US' OR country = 'JP' OR country = 'GB'
-  ✓ WHERE country IN ('US', 'JP', 'GB')
+  ❌ WHERE COUNTRY = 'US' OR COUNTRY = 'JP' OR COUNTRY = 'GB'
+  ✓ WHERE COUNTRY IN ('US', 'JP', 'GB')
 */
 
 
@@ -172,13 +172,13 @@ LIMIT 20;
 -- =====================================================================
 
 SELECT
-    event_id,
-    user_id,
-    event_type,
-    page_url,
-    event_timestamp
-FROM raw_events
-WHERE event_type NOT IN ('page_view', 'click')
+    EVENT_ID,
+    USER_ID,
+    EVENT_TYPE,
+    PAGE_URL,
+    EVENT_TIMESTAMP
+FROM RAW_EVENTS
+WHERE EVENT_TYPE NOT IN ('page_view', 'click')
 LIMIT 20;
 
 /*
@@ -192,9 +192,9 @@ page_view と click 以外のイベントを取得します。
 -- DISTINCT1：ユニークなイベント種別を確認
 -- =====================================================================
 
-SELECT DISTINCT event_type
-FROM raw_events
-ORDER BY event_type;
+SELECT DISTINCT EVENT_TYPE
+FROM RAW_EVENTS
+ORDER BY EVENT_TYPE;
 
 /*
 期待される出力：
@@ -220,13 +220,13 @@ ORDER BY event_type;
 -- DISTINCT2：ユニークなデバイス・国の組み合わせ
 -- =====================================================================
 
-SELECT DISTINCT device_type, country
-FROM raw_events
-ORDER BY country, device_type;
+SELECT DISTINCT DEVICE_TYPE, COUNTRY
+FROM RAW_EVENTS
+ORDER BY COUNTRY, DEVICE_TYPE;
 
 /*
 実行結果：
-データ内に存在する device_type と country の
+データ内に存在する DEVICE_TYPE と COUNTRY の
 全ての組み合わせが表示されます。
 
 実務での応用：
@@ -239,22 +239,22 @@ ORDER BY country, device_type;
 -- DISTINCT3：ユニークなユーザー数（COUNT + DISTINCT）
 -- =====================================================================
 
-SELECT COUNT(DISTINCT user_id) AS unique_user_count
-FROM raw_events;
+SELECT COUNT(DISTINCT USER_ID) AS UNIQUE_USER_COUNT
+FROM RAW_EVENTS;
 
 /*
 実行結果：
-raw_eventsテーブルに登場する一意なユーザー数が表示されます。
+RAW_EVENTSテーブルに登場する一意なユーザー数が表示されます。
 
 【重要な注意】
   DISTINCT は大規模データではパフォーマンス劣化の原因になります
 
 パフォーマンス比較：
-  ❌ SELECT COUNT(DISTINCT user_id) FROM raw_events;
+  ❌ SELECT COUNT(DISTINCT USER_ID) FROM RAW_EVENTS;
      （50万行全体をスキャンして重複排除を実施）
 
   ✓ SELECT COUNT(*) FROM (
-      SELECT DISTINCT user_id FROM raw_events
+      SELECT DISTINCT USER_ID FROM RAW_EVENTS
     );
      （WITH句を使ってステップ化）
 */
@@ -264,12 +264,12 @@ raw_eventsテーブルに登場する一意なユーザー数が表示されま�
 -- DISTINCT4：複数カラムのDISTINCT
 -- =====================================================================
 
-SELECT COUNT(DISTINCT user_id, device_type) AS unique_combinations
-FROM raw_events;
+SELECT COUNT(DISTINCT USER_ID, DEVICE_TYPE) AS UNIQUE_COMBINATIONS
+FROM RAW_EVENTS;
 
 /*
 実行結果：
-user_id と device_type の一意な組み合わせ数を取得します。
+USER_ID と DEVICE_TYPE の一意な組み合わせ数を取得します。
 
 実務での応用：
   - ユーザーがどのデバイスから何回アクセスしたか
@@ -282,12 +282,12 @@ user_id と device_type の一意な組み合わせ数を取得します。
 -- =====================================================================
 
 SELECT
-    event_id,
-    user_id,
-    page_url,
-    event_timestamp
-FROM raw_events
-WHERE page_url IS NOT NULL
+    EVENT_ID,
+    USER_ID,
+    PAGE_URL,
+    EVENT_TIMESTAMP
+FROM RAW_EVENTS
+WHERE PAGE_URL IS NOT NULL
 LIMIT 10;
 
 /*
@@ -296,7 +296,7 @@ LIMIT 10;
   - IS NOT NULL : NULLでない
 
 注意：
-  WHERE page_url = NULL は動作しません
+  WHERE PAGE_URL = NULL は動作しません
   必ず IS NULL / IS NOT NULL を使用してください
 */
 
@@ -306,12 +306,12 @@ LIMIT 10;
 -- =====================================================================
 
 SELECT
-    event_id,
-    user_id,
-    page_url,
-    event_timestamp
-FROM raw_events
-WHERE page_url LIKE '/products%'
+    EVENT_ID,
+    USER_ID,
+    PAGE_URL,
+    EVENT_TIMESTAMP
+FROM RAW_EVENTS
+WHERE PAGE_URL LIKE '/products%'
 LIMIT 20;
 
 /*
@@ -331,12 +331,12 @@ LIMIT 20;
 -- =====================================================================
 
 SELECT
-    event_id,
-    user_id,
-    event_type,
-    event_timestamp
-FROM raw_events
-WHERE DATE(event_timestamp) BETWEEN
+    EVENT_ID,
+    USER_ID,
+    EVENT_TYPE,
+    EVENT_TIMESTAMP
+FROM RAW_EVENTS
+WHERE DATE(EVENT_TIMESTAMP) BETWEEN
     DATEADD(day, -30, CURRENT_DATE()) AND CURRENT_DATE()
 LIMIT 20;
 
@@ -353,8 +353,8 @@ LIMIT 20;
   データの鮮度に依存しないクエリが書けます。
 
 他のオプション：
-  YEAR(event_timestamp) = YEAR(CURRENT_DATE())
-  MONTH(event_timestamp) = MONTH(CURRENT_DATE())
+  YEAR(EVENT_TIMESTAMP) = YEAR(CURRENT_DATE())
+  MONTH(EVENT_TIMESTAMP) = MONTH(CURRENT_DATE())
 */
 
 
@@ -366,7 +366,7 @@ LIMIT 20;
 【ベストプラクティス】
 
 1. 不要なカラムの取得を避ける
-   SELECT event_id, user_id, event_type FROM raw_events;
+   SELECT EVENT_ID, USER_ID, EVENT_TYPE FROM RAW_EVENTS;
 
 2. フィルタリングは早期に実施
    WHERE句で行数を絞ってから集計
@@ -375,8 +375,8 @@ LIMIT 20;
    パフォーマンスの低下を招く可能性がある
 
 4. インデックスが効いているカラムでフィルタ
-   WHERE event_timestamp > '2025-12-01'（推奨）
-   WHERE YEAR(event_timestamp) = 2025（避けるべき）
+   WHERE EVENT_TIMESTAMP > '2025-12-01'（推奨）
+   WHERE YEAR(EVENT_TIMESTAMP) = 2025（避けるべき）
 
 5. LIKE検索は前方一致を使用
    WHERE url LIKE '/products%'（効率的）
@@ -389,24 +389,24 @@ LIMIT 20;
 -- =====================================================================
 
 SELECT
-    event_id,
-    user_id,
-    event_type,
-    device_type,
-    country,
-    event_timestamp
-FROM raw_events
+    EVENT_ID,
+    USER_ID,
+    EVENT_TYPE,
+    DEVICE_TYPE,
+    COUNTRY,
+    EVENT_TIMESTAMP
+FROM RAW_EVENTS
 WHERE
     -- 条件1：対象期間（過去30日間）
-    DATE(event_timestamp) >= DATEADD(day, -30, CURRENT_DATE())
+    DATE(EVENT_TIMESTAMP) >= DATEADD(day, -30, CURRENT_DATE())
     -- 条件2：特定の国
-    AND country IN ('US', 'JP')
+    AND COUNTRY IN ('US', 'JP')
     -- 条件3：対象イベント
-    AND event_type IN ('purchase', 'checkout')
+    AND EVENT_TYPE IN ('purchase', 'checkout')
     -- 条件4：デバイス
-    AND device_type IN ('mobile', 'desktop')
+    AND DEVICE_TYPE IN ('mobile', 'desktop')
     -- 条件5：NULL除外
-    AND page_url IS NOT NULL
+    AND PAGE_URL IS NOT NULL
 LIMIT 20;
 
 /*

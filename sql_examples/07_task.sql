@@ -118,14 +118,14 @@ WAREHOUSE = task_wh
 AFTER tsk_parent_daily_summary  -- 親タスク完了待ち
 AS
 -- 週別集計（日別集計テーブルから生成）
-INSERT INTO weekly_summary (week_start, week_end, event_count, unique_users)
+INSERT INTO WEEKLY_SUMMARY (WEEK_START, WEEK_END, EVENT_COUNT, UNIQUE_USERS)
 SELECT
-    DATE_TRUNC('WEEK', event_date) AS week_start,
-    DATEADD(day, 6, DATE_TRUNC('WEEK', event_date)) AS week_end,
-    SUM(event_count) AS event_count,
-    SUM(unique_users) AS unique_users
-FROM daily_summary
-GROUP BY DATE_TRUNC('WEEK', event_date);
+    DATE_TRUNC('WEEK', EVENT_DATE) AS WEEK_START,
+    DATEADD(day, 6, DATE_TRUNC('WEEK', EVENT_DATE)) AS WEEK_END,
+    SUM(EVENT_COUNT) AS EVENT_COUNT,
+    SUM(UNIQUE_USERS) AS UNIQUE_USERS
+FROM DAILY_SUMMARY
+GROUP BY DATE_TRUNC('WEEK', EVENT_DATE);
 
 -- タスク有効化
 ALTER TASK tsk_parent_daily_summary RESUME;
@@ -154,35 +154,35 @@ CREATE OR REPLACE TASK tsk_etl_clean_events
 WAREHOUSE = task_wh
 SCHEDULE = 'USING CRON 0 1 * * * UTC'
 AS
-DELETE FROM raw_events
-WHERE event_timestamp IS NULL OR user_id IS NULL;
+DELETE FROM RAW_EVENTS
+WHERE EVENT_TIMESTAMP IS NULL OR USER_ID IS NULL;
 
 -- 子タスク1：日別集計
 CREATE OR REPLACE TASK tsk_etl_daily_summary
 WAREHOUSE = task_wh
 AFTER tsk_etl_clean_events
 AS
-INSERT INTO daily_summary (event_date, event_count, unique_users)
+INSERT INTO DAILY_SUMMARY (EVENT_DATE, EVENT_COUNT, UNIQUE_USERS)
 SELECT
-    DATE(event_timestamp) AS event_date,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT user_id) AS unique_users
-FROM raw_events
-GROUP BY DATE(event_timestamp);
+    DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
+FROM RAW_EVENTS
+GROUP BY DATE(EVENT_TIMESTAMP);
 
 -- 子タスク2：アクティブユーザー分析
 CREATE OR REPLACE TASK tsk_etl_active_users
 WAREHOUSE = task_wh
 AFTER tsk_etl_clean_events
 AS
-INSERT INTO active_users (user_id, last_event_date, total_events)
+INSERT INTO ACTIVE_USERS (USER_ID, LAST_EVENT_DATE, TOTAL_EVENTS)
 SELECT
-    user_id,
-    MAX(DATE(event_timestamp)) AS last_event_date,
-    COUNT(*) AS total_events
-FROM raw_events
-WHERE DATE(event_timestamp) >= DATEADD(day, -30, CURRENT_DATE())
-GROUP BY user_id;
+    USER_ID,
+    MAX(DATE(EVENT_TIMESTAMP)) AS LAST_EVENT_DATE,
+    COUNT(*) AS TOTAL_EVENTS
+FROM RAW_EVENTS
+WHERE DATE(EVENT_TIMESTAMP) >= DATEADD(day, -30, CURRENT_DATE())
+GROUP BY USER_ID;
 
 -- 有効化
 ALTER TASK tsk_etl_clean_events RESUME;
@@ -209,16 +209,16 @@ CREATE OR REPLACE TASK tsk_direct_sql_insert
 WAREHOUSE = task_wh
 SCHEDULE = 'USING CRON 0 3 * * * UTC'
 AS
-INSERT INTO daily_summary (event_date, event_count, unique_users)
+INSERT INTO DAILY_SUMMARY (EVENT_DATE, EVENT_COUNT, UNIQUE_USERS)
 SELECT
-    DATE(event_timestamp) AS event_date,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT user_id) AS unique_users
-FROM raw_events
-GROUP BY DATE(event_timestamp)
+    DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
+FROM RAW_EVENTS
+GROUP BY DATE(EVENT_TIMESTAMP)
 ON CONFLICT DO UPDATE SET
-    event_count = EXCLUDED.event_count,
-    unique_users = EXCLUDED.unique_users;
+    EVENT_COUNT = EXCLUDED.EVENT_COUNT,
+    UNIQUE_USERS = EXCLUDED.UNIQUE_USERS;
 
 ALTER TASK tsk_direct_sql_insert RESUME;
 
@@ -334,12 +334,12 @@ EXECUTE TASK tsk_daily_summary;
 【本番環境での推奨】
 
 1. 実行結果をテーブルに記録
-CREATE TABLE task_execution_log (
-    task_name VARCHAR,
-    execution_time TIMESTAMP,
-    status VARCHAR,
-    error_message VARCHAR,
-    duration_seconds INTEGER
+CREATE TABLE TASK_EXECUTION_LOG (
+    TASK_NAME VARCHAR,
+    EXECUTION_TIME TIMESTAMP,
+    STATUS VARCHAR,
+    ERROR_MESSAGE VARCHAR,
+    DURATION_SECONDS INTEGER
 );
 
 2. 失敗時の通知（Snowflake Alert機能）

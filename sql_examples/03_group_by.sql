@@ -24,15 +24,15 @@
 -- =====================================================================
 
 SELECT
-    DATE(event_timestamp) AS event_date,
-    COUNT(*) AS event_count
-FROM raw_events
-GROUP BY DATE(event_timestamp)
-ORDER BY event_date DESC;
+    DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+    COUNT(*) AS EVENT_COUNT
+FROM RAW_EVENTS
+GROUP BY DATE(EVENT_TIMESTAMP)
+ORDER BY EVENT_DATE DESC;
 
 /*
 【GROUP BY の動作】
-  DATE(event_timestamp) でグループ化
+  DATE(EVENT_TIMESTAMP) でグループ化
   各グループの行数を COUNT(*) で計算
 
 実行結果：
@@ -49,19 +49,19 @@ ORDER BY event_date DESC;
 -- =====================================================================
 
 SELECT
-    DATE(event_timestamp) AS event_date,
-    COUNT(*) AS total_events,
-    COUNT(DISTINCT user_id) AS unique_users,
-    COUNT(DISTINCT session_id) AS unique_sessions
-FROM raw_events
-GROUP BY DATE(event_timestamp)
-ORDER BY event_date DESC;
+    DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+    COUNT(*) AS TOTAL_EVENTS,
+    COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
+    COUNT(DISTINCT SESSION_ID) AS UNIQUE_SESSIONS
+FROM RAW_EVENTS
+GROUP BY DATE(EVENT_TIMESTAMP)
+ORDER BY EVENT_DATE DESC;
 
 /*
 このクエリから得られる情報：
-  - total_events：その日のイベント総数
-  - unique_users：その日のアクティブユーザー数
-  - unique_sessions：その日のセッション数
+  - TOTAL_EVENTS：その日のイベント総数
+  - UNIQUE_USERS：その日のアクティブユーザー数
+  - UNIQUE_SESSIONS：その日のセッション数
 
 実務での応用：
   - 日別のサイトアクティビティ監視
@@ -74,23 +74,23 @@ ORDER BY event_date DESC;
 -- =====================================================================
 
 SELECT
-    device_type,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT user_id) AS unique_users,
-    ROUND(COUNT(*)::FLOAT / COUNT(DISTINCT user_id), 2) AS avg_events_per_user,
-    MAX(event_timestamp) AS latest_event,
-    MIN(event_timestamp) AS earliest_event
-FROM raw_events
-GROUP BY device_type
-ORDER BY event_count DESC;
+    DEVICE_TYPE,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
+    ROUND(COUNT(*)::FLOAT / COUNT(DISTINCT USER_ID), 2) AS AVG_EVENTS_PER_USER,
+    MAX(EVENT_TIMESTAMP) AS LATEST_EVENT,
+    MIN(EVENT_TIMESTAMP) AS EARLIEST_EVENT
+FROM RAW_EVENTS
+GROUP BY DEVICE_TYPE
+ORDER BY EVENT_COUNT DESC;
 
 /*
 【各集計関数の説明】
   - COUNT(*)：行数（全て）
-  - COUNT(DISTINCT user_id)：ユニークユーザー数
+  - COUNT(DISTINCT USER_ID)：ユニークユーザー数
   - COUNT(*)::FLOAT：型キャスト（分割用）
-  - MAX(event_timestamp)：最新のイベント時刻
-  - MIN(event_timestamp)：最古のイベント時刻
+  - MAX(EVENT_TIMESTAMP)：最新のイベント時刻
+  - MIN(EVENT_TIMESTAMP)：最古のイベント時刻
 
 実務での応用：
   - デバイス別のユーザー行動分析
@@ -102,15 +102,15 @@ ORDER BY event_count DESC;
 -- =====================================================================
 
 SELECT
-    DATE(s.session_start) AS session_date,
-    COUNT(*) AS session_count,
-    SUM(s.page_views) AS total_page_views,
-    ROUND(AVG(s.page_views), 2) AS avg_page_views,
-    MAX(s.page_views) AS max_page_views,
-    MIN(s.page_views) AS min_page_views
-FROM sessions s
-GROUP BY DATE(s.session_start)
-ORDER BY session_date DESC;
+    DATE(s.SESSION_START) AS SESSION_DATE,
+    COUNT(*) AS SESSION_COUNT,
+    SUM(s.PAGE_VIEWS) AS TOTAL_PAGE_VIEWS,
+    ROUND(AVG(s.PAGE_VIEWS), 2) AS AVG_PAGE_VIEWS,
+    MAX(s.PAGE_VIEWS) AS MAX_PAGE_VIEWS,
+    MIN(s.PAGE_VIEWS) AS MIN_PAGE_VIEWS
+FROM SESSIONS s
+GROUP BY DATE(s.SESSION_START)
+ORDER BY SESSION_DATE DESC;
 
 /*
 【数値集計関数】
@@ -130,13 +130,13 @@ ORDER BY session_date DESC;
 -- =====================================================================
 
 SELECT
-    user_id,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT session_id) AS session_count
-FROM raw_events
-GROUP BY user_id
+    USER_ID,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT SESSION_ID) AS SESSION_COUNT
+FROM RAW_EVENTS
+GROUP BY USER_ID
 HAVING COUNT(*) > 100  -- 100イベント以上のユーザーのみ
-ORDER BY event_count DESC;
+ORDER BY EVENT_COUNT DESC;
 
 /*
 【HAVING vs WHERE】
@@ -157,23 +157,23 @@ ORDER BY event_count DESC;
 -- =====================================================================
 
 SELECT
-    u.country,
-    u.plan_type,
-    COUNT(DISTINCT e.user_id) AS user_count,
-    COUNT(e.event_id) AS event_count,
-    COUNT(DISTINCT CASE WHEN e.event_type = 'purchase' THEN e.event_id END) AS purchase_count
-FROM raw_events e
-INNER JOIN users u ON e.user_id = u.user_id
-WHERE e.event_timestamp >= DATEADD(day, -7, CURRENT_DATE())  -- 過去7日間
-GROUP BY u.country, u.plan_type
-HAVING COUNT(DISTINCT e.user_id) >= 10  -- 10ユーザー以上
-ORDER BY event_count DESC;
+    u.COUNTRY,
+    u.PLAN_TYPE,
+    COUNT(DISTINCT e.USER_ID) AS USER_COUNT,
+    COUNT(e.EVENT_ID) AS EVENT_COUNT,
+    COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END) AS PURCHASE_COUNT
+FROM RAW_EVENTS e
+INNER JOIN USERS u ON e.USER_ID = u.USER_ID
+WHERE e.EVENT_TIMESTAMP >= DATEADD(day, -7, CURRENT_DATE())  -- 過去7日間
+GROUP BY u.COUNTRY, u.PLAN_TYPE
+HAVING COUNT(DISTINCT e.USER_ID) >= 10  -- 10ユーザー以上
+ORDER BY EVENT_COUNT DESC;
 
 /*
 【実行順序】
-  1. WHERE：e.event_timestamp >= ... でフィルタ
+  1. WHERE：e.EVENT_TIMESTAMP >= ... でフィルタ
   2. JOIN：テーブル結合
-  3. GROUP BY：country, plan_type でグループ化
+  3. GROUP BY：COUNTRY, PLAN_TYPE でグループ化
   4. HAVING：ユーザー数 >= 10 でフィルタ
   5. ORDER BY：結果をソート
 
@@ -188,20 +188,20 @@ ORDER BY event_count DESC;
 -- =====================================================================
 
 SELECT
-    DATE(e.event_timestamp) AS event_date,
-    e.event_type,
-    e.device_type,
-    u.country,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT e.user_id) AS unique_users
-FROM raw_events e
-INNER JOIN users u ON e.user_id = u.user_id
+    DATE(e.EVENT_TIMESTAMP) AS EVENT_DATE,
+    e.EVENT_TYPE,
+    e.DEVICE_TYPE,
+    u.COUNTRY,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT e.USER_ID) AS UNIQUE_USERS
+FROM RAW_EVENTS e
+INNER JOIN USERS u ON e.USER_ID = u.USER_ID
 GROUP BY
-    DATE(e.event_timestamp),
-    e.event_type,
-    e.device_type,
-    u.country
-ORDER BY event_date DESC, event_count DESC
+    DATE(e.EVENT_TIMESTAMP),
+    e.EVENT_TYPE,
+    e.DEVICE_TYPE,
+    u.COUNTRY
+ORDER BY EVENT_DATE DESC, EVENT_COUNT DESC
 LIMIT 50;
 
 /*
@@ -214,9 +214,9 @@ LIMIT 50;
   SELECT で集計関数なしで指定可能
 
 例：
-  ✓ SELECT DATE(...), event_type, COUNT(*) FROM ... GROUP BY DATE(...), event_type
-  ❌ SELECT DATE(...), event_type, device_type, COUNT(*) FROM ... GROUP BY DATE(...), event_type
-     （device_type が GROUP BY にない）
+  ✓ SELECT DATE(...), EVENT_TYPE, COUNT(*) FROM ... GROUP BY DATE(...), EVENT_TYPE
+  ❌ SELECT DATE(...), EVENT_TYPE, DEVICE_TYPE, COUNT(*) FROM ... GROUP BY DATE(...), EVENT_TYPE
+     （DEVICE_TYPE が GROUP BY にない）
 */
 
 
@@ -225,16 +225,16 @@ LIMIT 50;
 -- =====================================================================
 
 SELECT
-    u.country,
-    COUNT(*) AS total_events,
-    COUNT(CASE WHEN e.event_type = 'purchase' THEN 1 END) AS purchase_events,
-    COUNT(CASE WHEN e.event_type = 'checkout' THEN 1 END) AS checkout_events,
-    COUNT(CASE WHEN e.event_type = 'add_to_cart' THEN 1 END) AS cart_events,
-    COUNT(CASE WHEN e.event_type = 'page_view' THEN 1 END) AS pageview_events
-FROM raw_events e
-INNER JOIN users u ON e.user_id = u.user_id
-GROUP BY u.country
-ORDER BY total_events DESC;
+    u.COUNTRY,
+    COUNT(*) AS TOTAL_EVENTS,
+    COUNT(CASE WHEN e.EVENT_TYPE = 'purchase' THEN 1 END) AS PURCHASE_EVENTS,
+    COUNT(CASE WHEN e.EVENT_TYPE = 'checkout' THEN 1 END) AS CHECKOUT_EVENTS,
+    COUNT(CASE WHEN e.EVENT_TYPE = 'add_to_cart' THEN 1 END) AS CART_EVENTS,
+    COUNT(CASE WHEN e.EVENT_TYPE = 'page_view' THEN 1 END) AS PAGEVIEW_EVENTS
+FROM RAW_EVENTS e
+INNER JOIN USERS u ON e.USER_ID = u.USER_ID
+GROUP BY u.COUNTRY
+ORDER BY TOTAL_EVENTS DESC;
 
 /*
 【CASE文による分岐集計】
@@ -255,18 +255,18 @@ ORDER BY total_events DESC;
 
 -- GROUP BYを使った集計
 SELECT
-    DATE(event_timestamp) AS event_date,
-    COUNT(*) AS daily_events
-FROM raw_events
-GROUP BY DATE(event_timestamp)
-ORDER BY event_date;
+    DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+    COUNT(*) AS DAILY_EVENTS
+FROM RAW_EVENTS
+GROUP BY DATE(EVENT_TIMESTAMP)
+ORDER BY EVENT_DATE;
 
 -- ウィンドウ関数を使った集計（参考）
 SELECT DISTINCT
-    DATE(event_timestamp) AS event_date,
-    COUNT(*) OVER (PARTITION BY DATE(event_timestamp)) AS daily_events
-FROM raw_events
-ORDER BY event_date;
+    DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+    COUNT(*) OVER (PARTITION BY DATE(EVENT_TIMESTAMP)) AS DAILY_EVENTS
+FROM RAW_EVENTS
+ORDER BY EVENT_DATE;
 
 /*
 【GROUP BY vs ウィンドウ関数】
@@ -291,16 +291,16 @@ ORDER BY event_date;
 -- =====================================================================
 
 SELECT
-    COALESCE(device_type, 'Unknown') AS device_type,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT user_id) AS user_count
-FROM raw_events
-GROUP BY device_type
-ORDER BY event_count DESC;
+    COALESCE(DEVICE_TYPE, 'Unknown') AS DEVICE_TYPE,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT USER_ID) AS USER_COUNT
+FROM RAW_EVENTS
+GROUP BY DEVICE_TYPE
+ORDER BY EVENT_COUNT DESC;
 
 /*
 【NULL値の処理】
-  - COALESCE(device_type, 'Unknown')：
+  - COALESCE(DEVICE_TYPE, 'Unknown')：
     NULLの場合は'Unknown'に置き換え
 
 実務での応用：
@@ -314,31 +314,31 @@ ORDER BY event_count DESC;
 -- =====================================================================
 
 SELECT
-    u.plan_type,
-    COUNT(DISTINCT e.user_id) AS user_count,
-    COUNT(e.event_id) AS event_count,
-    ROUND(COUNT(e.event_id)::FLOAT / COUNT(DISTINCT e.user_id), 2) AS avg_events_per_user,
-    COUNT(DISTINCT CASE WHEN e.event_type = 'purchase' THEN e.event_id END) AS purchase_count,
+    u.PLAN_TYPE,
+    COUNT(DISTINCT e.USER_ID) AS USER_COUNT,
+    COUNT(e.EVENT_ID) AS EVENT_COUNT,
+    ROUND(COUNT(e.EVENT_ID)::FLOAT / COUNT(DISTINCT e.USER_ID), 2) AS AVG_EVENTS_PER_USER,
+    COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END) AS PURCHASE_COUNT,
     ROUND(
-        COUNT(DISTINCT CASE WHEN e.event_type = 'purchase' THEN e.event_id END)::FLOAT /
-        COUNT(DISTINCT e.user_id),
+        COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END)::FLOAT /
+        COUNT(DISTINCT e.USER_ID),
         4
-    ) AS purchase_rate,
+    ) AS PURCHASE_RATE,
     ROUND(
-        COUNT(DISTINCT CASE WHEN e.event_type = 'purchase' THEN e.event_id END)::FLOAT /
-        COUNT(e.event_id),
+        COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END)::FLOAT /
+        COUNT(e.EVENT_ID),
         4
-    ) AS purchase_event_ratio
-FROM raw_events e
-INNER JOIN users u ON e.user_id = u.user_id
-GROUP BY u.plan_type
-ORDER BY user_count DESC;
+    ) AS PURCHASE_EVENT_RATIO
+FROM RAW_EVENTS e
+INNER JOIN USERS u ON e.USER_ID = u.USER_ID
+GROUP BY u.PLAN_TYPE
+ORDER BY USER_COUNT DESC;
 
 /*
 【集計後の計算】
-  - avg_events_per_user：ユーザー当たりイベント数
-  - purchase_rate：購入ユーザー数 / 全ユーザー数
-  - purchase_event_ratio：購入イベント数 / 全イベント数
+  - AVG_EVENTS_PER_USER：ユーザー当たりイベント数
+  - PURCHASE_RATE：購入ユーザー数 / 全ユーザー数
+  - PURCHASE_EVENT_RATIO：購入イベント数 / 全イベント数
 
 これらのKPI計算は実務で頻繁に行われます
 */
@@ -349,20 +349,20 @@ ORDER BY user_count DESC;
 -- =====================================================================
 
 SELECT
-    DATE(e.event_timestamp) AS event_date,
-    e.event_type,
-    e.device_type,
-    COUNT(*) AS event_count
-FROM raw_events e
+    DATE(e.EVENT_TIMESTAMP) AS EVENT_DATE,
+    e.EVENT_TYPE,
+    e.DEVICE_TYPE,
+    COUNT(*) AS EVENT_COUNT
+FROM RAW_EVENTS e
 GROUP BY ALL  -- SELECT の全カラムで自動的にグループ化
-ORDER BY event_date DESC, event_count DESC;
+ORDER BY EVENT_DATE DESC, EVENT_COUNT DESC;
 
 /*
 【GROUP BY ALL】
   Snowflakeの便利な機能で、SELECTの全カラムで自動グループ化
 
 上記は以下と同等：
-  GROUP BY DATE(e.event_timestamp), e.event_type, e.device_type
+  GROUP BY DATE(e.EVENT_TIMESTAMP), e.EVENT_TYPE, e.DEVICE_TYPE
 */
 
 
@@ -374,21 +374,21 @@ ORDER BY event_date DESC, event_count DESC;
 【GROUP BY のベストプラクティス】
 
 1. 不要なカラムはSELECTに含めない
-   ✓ SELECT country, COUNT(*)
-   ❌ SELECT country, user_id, COUNT(*)  (user_id で更にグループ化される)
+   ✓ SELECT COUNTRY, COUNT(*)
+   ❌ SELECT COUNTRY, USER_ID, COUNT(*)  (USER_ID で更にグループ化される)
 
 2. フィルタリングはWHEREで実施
-   WHERE event_timestamp >= '2025-12-01'  (グループ化前に行数削減)
+   WHERE EVENT_TIMESTAMP >= '2025-12-01'  (グループ化前に行数削減)
 
 3. 集計後のフィルタはHAVINGで実施
    HAVING COUNT(*) > 10
 
 4. DISTINCT の多用を避ける
-   COUNT(DISTINCT user_id) は処理が重い場合がある
+   COUNT(DISTINCT USER_ID) は処理が重い場合がある
 
 5. GROUP BY の順序
    頻繁にフィルタされるカラムを左に
-   GROUP BY date, country (← dateの方が一般的なフィルタ)
+   GROUP BY date, COUNTRY (← dateの方が一般的なフィルタ)
 
 6. インデックスを活用
    GROUP BY のベースとなるカラムにインデックスがあると高速化
@@ -400,26 +400,26 @@ ORDER BY event_date DESC, event_count DESC;
 -- =====================================================================
 
 SELECT
-    DATE(e.event_timestamp) AS event_date,
-    u.country,
-    e.device_type,
-    e.event_type,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT e.user_id) AS user_count,
-    COUNT(DISTINCT e.session_id) AS session_count,
-    ROUND(COUNT(*)::FLOAT / COUNT(DISTINCT e.user_id), 2) AS avg_events_per_user,
-    ROUND(COUNT(*)::FLOAT / COUNT(DISTINCT e.session_id), 2) AS avg_events_per_session,
-    MAX(e.event_timestamp) AS latest_event
-FROM raw_events e
-INNER JOIN users u ON e.user_id = u.user_id
-WHERE e.event_timestamp >= DATEADD(day, -30, CURRENT_DATE())
+    DATE(e.EVENT_TIMESTAMP) AS EVENT_DATE,
+    u.COUNTRY,
+    e.DEVICE_TYPE,
+    e.EVENT_TYPE,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT e.USER_ID) AS USER_COUNT,
+    COUNT(DISTINCT e.SESSION_ID) AS SESSION_COUNT,
+    ROUND(COUNT(*)::FLOAT / COUNT(DISTINCT e.USER_ID), 2) AS AVG_EVENTS_PER_USER,
+    ROUND(COUNT(*)::FLOAT / COUNT(DISTINCT e.SESSION_ID), 2) AS AVG_EVENTS_PER_SESSION,
+    MAX(e.EVENT_TIMESTAMP) AS LATEST_EVENT
+FROM RAW_EVENTS e
+INNER JOIN USERS u ON e.USER_ID = u.USER_ID
+WHERE e.EVENT_TIMESTAMP >= DATEADD(day, -30, CURRENT_DATE())
 GROUP BY
-    DATE(e.event_timestamp),
-    u.country,
-    e.device_type,
-    e.event_type
+    DATE(e.EVENT_TIMESTAMP),
+    u.COUNTRY,
+    e.DEVICE_TYPE,
+    e.EVENT_TYPE
 HAVING COUNT(*) > 5  -- サンプルサイズ確保
-ORDER BY event_date DESC, event_count DESC;
+ORDER BY EVENT_DATE DESC, EVENT_COUNT DESC;
 
 /*
 このテンプレートは実務で頻繁に使用されます：

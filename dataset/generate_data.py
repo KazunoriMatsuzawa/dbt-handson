@@ -15,7 +15,7 @@
 
 生成データの特徴：
 - リアルなログデータを再現（時系列、分布など）
-- 外部キー制約を満たす（user_id、session_idの整合性）
+- 外部キー制約を満たす（USER_ID、SESSION_IDの整合性）
 - 複数国のデータ（主にUS、JP、GB、DE、FR等）
 """
 
@@ -87,8 +87,8 @@ def generate_session_id():
 
 
 def generate_users():
-    """usersテーブルのデータを生成"""
-    print("Generating users table...")
+    """USERSテーブルのデータを生成"""
+    print("Generating USERS table...")
 
     # 登録日：過去180日以内
     signup_dates = [
@@ -97,33 +97,33 @@ def generate_users():
     ]
 
     users = pd.DataFrame({
-        'user_id': range(1, NUM_USERS + 1),
-        'signup_date': signup_dates,
-        'country': np.random.choice(
+        'USER_ID': range(1, NUM_USERS + 1),
+        'SIGNUP_DATE': signup_dates,
+        'COUNTRY': np.random.choice(
             list(COUNTRY_DISTRIBUTION.keys()),
             size=NUM_USERS,
             p=list(COUNTRY_DISTRIBUTION.values())
         ),
-        'plan_type': np.random.choice(
+        'PLAN_TYPE': np.random.choice(
             list(PLAN_DISTRIBUTION.keys()),
             size=NUM_USERS,
             p=list(PLAN_DISTRIBUTION.values())
         ),
-        'is_active': np.random.choice([True, False], size=NUM_USERS, p=[0.8, 0.2])
+        'IS_ACTIVE': np.random.choice([True, False], size=NUM_USERS, p=[0.8, 0.2])
     })
 
     return users
 
 
 def generate_sessions(users):
-    """sessionsテーブルのデータを生成"""
-    print("Generating sessions table...")
+    """SESSIONSテーブルのデータを生成"""
+    print("Generating SESSIONS table...")
 
     base_date = datetime.now() - timedelta(days=NUM_DAYS)
 
     sessions_data = []
     for _ in range(NUM_SESSIONS):
-        user_id = random.choice(users['user_id'].values)
+        user_id = random.choice(users['USER_ID'].values)
         session_start = base_date + timedelta(
             days=random.randint(0, NUM_DAYS - 1),
             hours=random.randint(0, 23),
@@ -135,12 +135,12 @@ def generate_sessions(users):
         page_views = max(1, np.random.exponential(scale=3, size=1)[0].astype(int) + 1)
 
         sessions_data.append({
-            'session_id': generate_session_id(),
-            'user_id': user_id,
-            'session_start': session_start,
-            'session_end': session_end,
-            'page_views': page_views,
-            'device_type': np.random.choice(
+            'SESSION_ID': generate_session_id(),
+            'USER_ID': user_id,
+            'SESSION_START': session_start,
+            'SESSION_END': session_end,
+            'PAGE_VIEWS': page_views,
+            'DEVICE_TYPE': np.random.choice(
                 list(DEVICE_DISTRIBUTION.keys()),
                 p=list(DEVICE_DISTRIBUTION.values())
             )
@@ -151,11 +151,11 @@ def generate_sessions(users):
 
 
 def generate_events(users, sessions):
-    """raw_eventsテーブルのデータを生成"""
-    print("Generating raw_events table...")
+    """RAW_EVENTSテーブルのデータを生成"""
+    print("Generating RAW_EVENTS table...")
 
-    # パフォーマンス改善：user_id → country のルックアップテーブルを事前作成
-    user_country_map = dict(zip(users['user_id'], users['country']))
+    # パフォーマンス改善：USER_ID → COUNTRY のルックアップテーブルを事前作成
+    user_country_map = dict(zip(users['USER_ID'], users['COUNTRY']))
 
     # イベント種別の選択肢を事前準備
     event_type_keys = list(EVENT_TYPE_DISTRIBUTION.keys())
@@ -166,26 +166,26 @@ def generate_events(users, sessions):
 
     # セッションごとにイベントを生成
     for idx, session in sessions.iterrows():
-        # セッション内のイベント数（page_viewsから決定）
-        num_events_in_session = session['page_views'] + np.random.poisson(lam=2)
-        session_duration = (session['session_end'] - session['session_start']).total_seconds()
+        # セッション内のイベント数（PAGE_VIEWSから決定）
+        num_events_in_session = session['PAGE_VIEWS'] + np.random.poisson(lam=2)
+        session_duration = (session['SESSION_END'] - session['SESSION_START']).total_seconds()
 
         for _ in range(num_events_in_session):
             # イベントはセッション期間内でランダムに分布
             time_offset = random.uniform(0, session_duration)
-            event_timestamp = session['session_start'] + timedelta(seconds=time_offset)
+            event_timestamp = session['SESSION_START'] + timedelta(seconds=time_offset)
 
             event_type = np.random.choice(event_type_keys, p=event_type_probs)
 
             events_data.append({
-                'event_id': event_id,
-                'user_id': session['user_id'],
-                'session_id': session['session_id'],
-                'event_type': event_type,
-                'page_url': random.choice(PAGE_URLS),
-                'event_timestamp': event_timestamp,
-                'device_type': session['device_type'],
-                'country': user_country_map[session['user_id']]
+                'EVENT_ID': event_id,
+                'USER_ID': session['USER_ID'],
+                'SESSION_ID': session['SESSION_ID'],
+                'EVENT_TYPE': event_type,
+                'PAGE_URL': random.choice(PAGE_URLS),
+                'EVENT_TIMESTAMP': event_timestamp,
+                'DEVICE_TYPE': session['DEVICE_TYPE'],
+                'COUNTRY': user_country_map[session['USER_ID']]
             })
             event_id += 1
 
@@ -244,16 +244,16 @@ if __name__ == '__main__':
         print("生成データの統計")
         print("=" * 80)
         print(f"Users: {len(users):,} rows")
-        print(f"  - Plan Type 分布:\n{users['plan_type'].value_counts()}")
-        print(f"  - Country 分布:\n{users['country'].value_counts()}")
+        print(f"  - PLAN_TYPE 分布:\n{users['PLAN_TYPE'].value_counts()}")
+        print(f"  - COUNTRY 分布:\n{users['COUNTRY'].value_counts()}")
         print()
         print(f"Sessions: {len(sessions):,} rows")
-        print(f"  - Device Type 分布:\n{sessions['device_type'].value_counts()}")
-        print(f"  - Page Views 統計:\n{sessions['page_views'].describe()}")
+        print(f"  - DEVICE_TYPE 分布:\n{sessions['DEVICE_TYPE'].value_counts()}")
+        print(f"  - PAGE_VIEWS 統計:\n{sessions['PAGE_VIEWS'].describe()}")
         print()
         print(f"Events: {len(events):,} rows")
-        print(f"  - Event Type 分布:\n{events['event_type'].value_counts()}")
-        print(f"  - Device Type 分布:\n{events['device_type'].value_counts()}")
+        print(f"  - EVENT_TYPE 分布:\n{events['EVENT_TYPE'].value_counts()}")
+        print(f"  - DEVICE_TYPE 分布:\n{events['DEVICE_TYPE'].value_counts()}")
         print()
         print("=" * 80)
         print("✓ データ生成完了")

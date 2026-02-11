@@ -10,7 +10,7 @@ Fact Model: daily_summary
 【特性】
   - Materialization: TABLE（パフォーマンス重視）
   - 入力：ref('int_daily_events')
-  - 出力：daily_summary テーブル
+  - 出力：DAILY_SUMMARY テーブル
 
 【ビジネス要件】
   - 日別に国別・プラン別の集計を保持
@@ -19,11 +19,11 @@ Fact Model: daily_summary
   - リアルタイム分析向け
 
 【推奨パーティション】
-  event_date でパーティショニング
+  EVENT_DATE でパーティショニング
   Snowflake では CLUSTER BY で最適化
 
 【出力】
-  analytics.marts.daily_summary
+  ANALYTICS.MARTS.DAILY_SUMMARY
 */
 
 {{ config(
@@ -31,10 +31,10 @@ Fact Model: daily_summary
     schema='marts',
     tags=['marts', 'daily'],
     description='日別パフォーマンスサマリー',
-    unique_key=['event_date', 'country', 'plan_type', 'user_segment'],
+    unique_key=['EVENT_DATE', 'COUNTRY', 'PLAN_TYPE', 'USER_SEGMENT'],
     indexes=[
-        {'columns': ['event_date']},
-        {'columns': ['country', 'plan_type']}
+        {'columns': ['EVENT_DATE']},
+        {'columns': ['COUNTRY', 'PLAN_TYPE']}
     ]
 ) }}
 
@@ -45,33 +45,33 @@ WITH daily_events AS (
 calculated_metrics AS (
     -- ステップ1：KPI計算
     SELECT
-        event_date,
-        country,
-        plan_type,
-        user_segment,
-        unique_users,
-        unique_sessions,
-        total_events,
-        pageview_events,
-        click_events,
-        add_to_cart_events,
-        checkout_events,
-        purchase_events,
-        acquired_users,
-        converted_users,
+        EVENT_DATE,
+        COUNTRY,
+        PLAN_TYPE,
+        USER_SEGMENT,
+        UNIQUE_USERS,
+        UNIQUE_SESSIONS,
+        TOTAL_EVENTS,
+        PAGEVIEW_EVENTS,
+        CLICK_EVENTS,
+        ADD_TO_CART_EVENTS,
+        CHECKOUT_EVENTS,
+        PURCHASE_EVENTS,
+        ACQUIRED_USERS,
+        CONVERTED_USERS,
 
         -- ステップ2：計算メトリクス
-        ROUND(total_events::FLOAT / NULLIF(unique_users, 0), 2) AS avg_events_per_user,
-        ROUND(total_events::FLOAT / NULLIF(unique_sessions, 0), 2) AS avg_events_per_session,
-        ROUND(unique_sessions::FLOAT / NULLIF(unique_users, 0), 2) AS avg_sessions_per_user,
-        ROUND(purchase_events::FLOAT / NULLIF(unique_users, 0), 4) AS purchase_rate,
-        ROUND(converted_users::FLOAT / NULLIF(unique_users, 0), 4) AS user_conversion_rate,
-        ROUND(purchase_events::FLOAT / NULLIF(total_events, 0), 4) AS purchase_event_ratio,
-        ROUND(checkout_events::FLOAT / NULLIF(add_to_cart_events, 0), 4) AS checkout_rate,
+        ROUND(TOTAL_EVENTS::FLOAT / NULLIF(UNIQUE_USERS, 0), 2) AS AVG_EVENTS_PER_USER,
+        ROUND(TOTAL_EVENTS::FLOAT / NULLIF(UNIQUE_SESSIONS, 0), 2) AS AVG_EVENTS_PER_SESSION,
+        ROUND(UNIQUE_SESSIONS::FLOAT / NULLIF(UNIQUE_USERS, 0), 2) AS AVG_SESSIONS_PER_USER,
+        ROUND(PURCHASE_EVENTS::FLOAT / NULLIF(UNIQUE_USERS, 0), 4) AS PURCHASE_RATE,
+        ROUND(CONVERTED_USERS::FLOAT / NULLIF(UNIQUE_USERS, 0), 4) AS USER_CONVERSION_RATE,
+        ROUND(PURCHASE_EVENTS::FLOAT / NULLIF(TOTAL_EVENTS, 0), 4) AS PURCHASE_EVENT_RATIO,
+        ROUND(CHECKOUT_EVENTS::FLOAT / NULLIF(ADD_TO_CART_EVENTS, 0), 4) AS CHECKOUT_RATE,
 
         -- ステップ3：メタデータ
-        CURRENT_TIMESTAMP() AS dbt_created_at,
-        '{{ run_started_at }}' AS dbt_run_started_at
+        CURRENT_TIMESTAMP() AS DBT_CREATED_AT,
+        '{{ run_started_at }}' AS DBT_RUN_STARTED_AT
     FROM daily_events
 )
 

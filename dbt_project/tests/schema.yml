@@ -6,94 +6,94 @@ version: 2
 sources:
   - name: analytics
     description: "分析用の基本データソース"
-    database: analytics
-    schema: public
+    database: ANALYTICS
+    schema: PUBLIC
     tables:
-      - name: raw_events
+      - name: RAW_EVENTS
         description: "生のイベントログデータ（Webアクセスログ）"
         columns:
-          - name: event_id
+          - name: EVENT_ID
             description: "イベントの一意な識別子"
             tests:
               - unique
               - not_null
-          - name: user_id
+          - name: USER_ID
             description: "ユーザーID"
             tests:
               - not_null
-          - name: session_id
+          - name: SESSION_ID
             description: "セッションID"
             tests:
               - not_null
-          - name: event_type
+          - name: EVENT_TYPE
             description: "イベント種別"
             tests:
               - accepted_values:
                   values: ['page_view', 'click', 'purchase', 'sign_up', 'add_to_cart', 'checkout']
               - not_null
-          - name: page_url
+          - name: PAGE_URL
             description: "ページURL"
-          - name: event_timestamp
+          - name: EVENT_TIMESTAMP
             description: "イベント発生日時（UTC）"
             tests:
               - not_null
-          - name: device_type
+          - name: DEVICE_TYPE
             description: "デバイス種別"
             tests:
               - accepted_values:
                   values: ['desktop', 'mobile', 'tablet']
-          - name: country
+          - name: COUNTRY
             description: "国コード（ISO 3166-1 alpha-2）"
 
-      - name: users
+      - name: USERS
         description: "ユーザーマスタ情報"
         columns:
-          - name: user_id
+          - name: USER_ID
             description: "ユーザーID（主キー）"
             tests:
               - unique
               - not_null
-          - name: signup_date
+          - name: SIGNUP_DATE
             description: "登録日"
             tests:
               - not_null
-          - name: country
+          - name: COUNTRY
             description: "国コード"
-          - name: plan_type
+          - name: PLAN_TYPE
             description: "プランタイプ"
             tests:
               - accepted_values:
                   values: ['free', 'premium']
               - not_null
-          - name: is_active
+          - name: IS_ACTIVE
             description: "アクティブフラグ"
             tests:
               - not_null
 
-      - name: sessions
+      - name: SESSIONS
         description: "セッション単位の集約データ"
         columns:
-          - name: session_id
+          - name: SESSION_ID
             description: "セッションID（主キー）"
             tests:
               - unique
               - not_null
-          - name: user_id
+          - name: USER_ID
             description: "ユーザーID"
             tests:
               - not_null
               - relationships:
-                  to: source('analytics', 'users')
-                  field: user_id
-          - name: session_start
+                  to: source('analytics', 'USERS')
+                  field: USER_ID
+          - name: SESSION_START
             description: "セッション開始時刻"
             tests:
               - not_null
-          - name: session_end
+          - name: SESSION_END
             description: "セッション終了時刻"
-          - name: page_views
+          - name: PAGE_VIEWS
             description: "ページビュー数"
-          - name: device_type
+          - name: DEVICE_TYPE
             description: "デバイス種別"
 
 
@@ -104,21 +104,21 @@ models:
   - name: stg_events
     description: "前処理済みイベントログ（VIEW）"
     columns:
-      - name: event_id
+      - name: EVENT_ID
         description: "イベントID（主キー）"
         tests:
           - unique
           - not_null
-      - name: user_id
+      - name: USER_ID
         description: "ユーザーID"
         tests:
           - not_null
-      - name: event_type
+      - name: EVENT_TYPE
         description: "標準化されたイベント種別"
         tests:
           - accepted_values:
               values: ['PAGE_VIEW', 'CLICK', 'PURCHASE', 'SIGN_UP', 'ADD_TO_CART', 'CHECKOUT']
-      - name: funnel_stage
+      - name: FUNNEL_STAGE
         description: "ファネル分析用のステージ（Acquisition, Consideration, Conversion）"
         tests:
           - accepted_values:
@@ -127,21 +127,21 @@ models:
   - name: stg_users
     description: "前処理済みユーザーマスタ（VIEW）"
     columns:
-      - name: user_id
+      - name: USER_ID
         description: "ユーザーID（主キー）"
         tests:
           - unique
           - not_null
-      - name: plan_type
+      - name: PLAN_TYPE
         description: "プランタイプ"
         tests:
           - accepted_values:
               values: ['free', 'premium']
-      - name: user_segment
+      - name: USER_SEGMENT
         description: "ユーザーセグメント（Premium Active等）"
         tests:
           - not_null
-      - name: cohort
+      - name: COHORT
         description: "ユーザーコホート（New, Onboarding等）"
         tests:
           - accepted_values:
@@ -154,27 +154,27 @@ models:
   - name: int_daily_events
     description: "日別・国別イベント集計（中間モデル、VIEW）"
     columns:
-      - name: event_date
+      - name: EVENT_DATE
         description: "イベント日"
         tests:
           - not_null
-      - name: country
+      - name: COUNTRY
         description: "国コード"
-      - name: plan_type
+      - name: PLAN_TYPE
         description: "プランタイプ"
-      - name: unique_users
+      - name: UNIQUE_USERS
         description: "ユニークユーザー数"
         tests:
           - not_null
           - dbt_utils.accepted_range:
               min_value: 0
-      - name: total_events
+      - name: TOTAL_EVENTS
         description: "イベント総数"
         tests:
           - not_null
           - dbt_utils.accepted_range:
               min_value: 0
-      - name: purchase_events
+      - name: PURCHASE_EVENTS
         description: "購入イベント数"
         tests:
           - dbt_utils.accepted_range:
@@ -187,39 +187,39 @@ models:
   - name: daily_summary
     description: "日別パフォーマンスサマリー（最終レポート用テーブル）"
     columns:
-      - name: event_date
+      - name: EVENT_DATE
         description: "イベント日"
         tests:
           - not_null
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
-            - event_date
-            - country
-            - plan_type
-            - user_segment
-      - name: country
+            - EVENT_DATE
+            - COUNTRY
+            - PLAN_TYPE
+            - USER_SEGMENT
+      - name: COUNTRY
         description: "国コード"
         tests:
           - not_null
-      - name: plan_type
+      - name: PLAN_TYPE
         description: "プランタイプ"
         tests:
           - accepted_values:
               values: ['free', 'premium']
-      - name: unique_users
+      - name: UNIQUE_USERS
         description: "ユニークユーザー数"
         tests:
           - not_null
           - dbt_utils.accepted_range:
               min_value: 0
-      - name: purchase_rate
+      - name: PURCHASE_RATE
         description: "購入レート（購入イベント数 / ユーザー数）"
         tests:
           - dbt_utils.accepted_range:
               min_value: 0
               max_value: 1
-      - name: user_conversion_rate
+      - name: USER_CONVERSION_RATE
         description: "ユーザーコンバージョンレート"
         tests:
           - dbt_utils.accepted_range:
@@ -229,26 +229,26 @@ models:
   - name: weekly_summary
     description: "週別パフォーマンスサマリー"
     columns:
-      - name: week_start_date
+      - name: WEEK_START_DATE
         description: "週の開始日"
         tests:
           - not_null
-      - name: country
+      - name: COUNTRY
         description: "国コード"
-      - name: plan_type
+      - name: PLAN_TYPE
         description: "プランタイプ"
-      - name: total_weekly_users
+      - name: TOTAL_WEEKLY_USERS
         description: "週間ユニークユーザー数"
         tests:
           - not_null
           - dbt_utils.accepted_range:
               min_value: 0
-      - name: total_weekly_purchases
+      - name: TOTAL_WEEKLY_PURCHASES
         description: "週間購入イベント数"
         tests:
           - dbt_utils.accepted_range:
               min_value: 0
-      - name: purchase_rate
+      - name: PURCHASE_RATE
         description: "週間購入レート"
         tests:
           - dbt_utils.accepted_range:

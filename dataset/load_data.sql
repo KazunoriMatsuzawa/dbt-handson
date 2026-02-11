@@ -28,34 +28,34 @@ Snowflakeにロードします。
 -- =====================================================================
 -- 注：これはオプションです。すでにステージが存在する場合はスキップしてください
 
-CREATE STAGE IF NOT EXISTS my_stage;
+CREATE STAGE IF NOT EXISTS MY_STAGE;
 
 -- =====================================================================
 -- 2. ローカルファイルのアップロード（コマンドライン実行）
 -- =====================================================================
 -- Snowflake CLIでこれらのコマンドを実行してください：
--- PUT file:///path/to/users.csv @my_stage/;
--- PUT file:///path/to/sessions.csv @my_stage/;
--- PUT file:///path/to/raw_events.csv @my_stage/;
+PUT file:///path/to/users.csv @MY_STAGE/ AUTO_COMPRESS=TRUE;
+PUT file:///path/to/sessions.csv @MY_STAGE/ AUTO_COMPRESS=TRUE;
+PUT file:///path/to/raw_events.csv @MY_STAGE/ AUTO_COMPRESS=TRUE;
 
 -- =====================================================================
 -- 3. ステージの内容確認
 -- =====================================================================
 -- アップロードされたファイルの確認
-LIST @my_stage/;
+LIST @MY_STAGE/;
 
 
 -- =====================================================================
--- 4. users テーブルへのロード
+-- 4. USERS テーブルへのロード
 -- =====================================================================
-COPY INTO users (
-    user_id,
-    signup_date,
-    country,
-    plan_type,
-    is_active
+COPY INTO USERS (
+    USER_ID,
+    SIGNUP_DATE,
+    COUNTRY,
+    PLAN_TYPE,
+    IS_ACTIVE
 )
-FROM @my_stage/users.csv
+FROM @MY_STAGE/users.csv
 FILE_FORMAT = (
     TYPE = 'CSV',
     SKIP_HEADER = 1,
@@ -68,22 +68,22 @@ FILE_FORMAT = (
 ON_ERROR = ABORT_STATEMENT;  -- エラー時は即停止（問題を早期発見するため）
 
 -- ロード確認
-SELECT COUNT(*) AS user_count FROM users;
-SELECT * FROM users LIMIT 5;
+SELECT COUNT(*) AS USER_COUNT FROM USERS;
+SELECT * FROM USERS LIMIT 5;
 
 
 -- =====================================================================
--- 5. sessions テーブルへのロード
+-- 5. SESSIONS テーブルへのロード
 -- =====================================================================
-COPY INTO sessions (
-    session_id,
-    user_id,
-    session_start,
-    session_end,
-    page_views,
-    device_type
+COPY INTO SESSIONS (
+    SESSION_ID,
+    USER_ID,
+    SESSION_START,
+    SESSION_END,
+    PAGE_VIEWS,
+    DEVICE_TYPE
 )
-FROM @my_stage/sessions.csv
+FROM @MY_STAGE/sessions.csv
 FILE_FORMAT = (
     TYPE = 'CSV',
     SKIP_HEADER = 1,
@@ -96,24 +96,24 @@ FILE_FORMAT = (
 ON_ERROR = ABORT_STATEMENT;  -- エラー時は即停止（問題を早期発見するため）
 
 -- ロード確認
-SELECT COUNT(*) AS session_count FROM sessions;
-SELECT * FROM sessions LIMIT 5;
+SELECT COUNT(*) AS SESSION_COUNT FROM SESSIONS;
+SELECT * FROM SESSIONS LIMIT 5;
 
 
 -- =====================================================================
--- 6. raw_events テーブルへのロード
+-- 6. RAW_EVENTS テーブルへのロード
 -- =====================================================================
-COPY INTO raw_events (
-    event_id,
-    user_id,
-    session_id,
-    event_type,
-    page_url,
-    event_timestamp,
-    device_type,
-    country
+COPY INTO RAW_EVENTS (
+    EVENT_ID,
+    USER_ID,
+    SESSION_ID,
+    EVENT_TYPE,
+    PAGE_URL,
+    EVENT_TIMESTAMP,
+    DEVICE_TYPE,
+    COUNTRY
 )
-FROM @my_stage/raw_events.csv
+FROM @MY_STAGE/raw_events.csv
 FILE_FORMAT = (
     TYPE = 'CSV',
     SKIP_HEADER = 1,
@@ -126,8 +126,8 @@ FILE_FORMAT = (
 ON_ERROR = ABORT_STATEMENT;  -- エラー時は即停止（問題を早期発見するため）
 
 -- ロード確認
-SELECT COUNT(*) AS event_count FROM raw_events;
-SELECT * FROM raw_events LIMIT 5;
+SELECT COUNT(*) AS EVENT_COUNT FROM RAW_EVENTS;
+SELECT * FROM RAW_EVENTS LIMIT 5;
 
 
 -- =====================================================================
@@ -136,41 +136,41 @@ SELECT * FROM raw_events LIMIT 5;
 
 -- テーブルサイズの確認
 SELECT
-    'users' AS table_name,
-    COUNT(*) AS row_count
-FROM users
+    'USERS' AS TABLE_NAME,
+    COUNT(*) AS ROW_COUNT
+FROM USERS
 UNION ALL
 SELECT
-    'sessions' AS table_name,
-    COUNT(*) AS row_count
-FROM sessions
+    'SESSIONS' AS TABLE_NAME,
+    COUNT(*) AS ROW_COUNT
+FROM SESSIONS
 UNION ALL
 SELECT
-    'raw_events' AS table_name,
-    COUNT(*) AS row_count
-FROM raw_events;
+    'RAW_EVENTS' AS TABLE_NAME,
+    COUNT(*) AS ROW_COUNT
+FROM RAW_EVENTS;
 
 
 -- 外部キー制約の検証
--- sessions.user_id が users.user_id に存在するか確認
-SELECT COUNT(*) AS orphaned_sessions
-FROM sessions s
+-- SESSIONS.USER_ID が USERS.USER_ID に存在するか確認
+SELECT COUNT(*) AS ORPHANED_SESSIONS
+FROM SESSIONS s
 WHERE NOT EXISTS (
-    SELECT 1 FROM users u WHERE u.user_id = s.user_id
+    SELECT 1 FROM USERS u WHERE u.USER_ID = s.USER_ID
 );
 
--- raw_events.user_id が users.user_id に存在するか確認
-SELECT COUNT(*) AS orphaned_events
-FROM raw_events e
+-- RAW_EVENTS.USER_ID が USERS.USER_ID に存在するか確認
+SELECT COUNT(*) AS ORPHANED_EVENTS
+FROM RAW_EVENTS e
 WHERE NOT EXISTS (
-    SELECT 1 FROM users u WHERE u.user_id = e.user_id
+    SELECT 1 FROM USERS u WHERE u.USER_ID = e.USER_ID
 );
 
--- raw_events.session_id が sessions.session_id に存在するか確認
-SELECT COUNT(*) AS orphaned_events_by_session
-FROM raw_events e
+-- RAW_EVENTS.SESSION_ID が SESSIONS.SESSION_ID に存在するか確認
+SELECT COUNT(*) AS ORPHANED_EVENTS_BY_SESSION
+FROM RAW_EVENTS e
 WHERE NOT EXISTS (
-    SELECT 1 FROM sessions s WHERE s.session_id = e.session_id
+    SELECT 1 FROM SESSIONS s WHERE s.SESSION_ID = e.SESSION_ID
 );
 
 
@@ -179,35 +179,35 @@ WHERE NOT EXISTS (
 -- =====================================================================
 
 -- 国別のユーザー数
-SELECT country, COUNT(*) as user_count
-FROM users
-GROUP BY country
-ORDER BY user_count DESC;
+SELECT COUNTRY, COUNT(*) AS USER_COUNT
+FROM USERS
+GROUP BY COUNTRY
+ORDER BY USER_COUNT DESC;
 
 
 -- イベント種別の分布
-SELECT event_type, COUNT(*) as event_count
-FROM raw_events
-GROUP BY event_type
-ORDER BY event_count DESC;
+SELECT EVENT_TYPE, COUNT(*) AS EVENT_COUNT
+FROM RAW_EVENTS
+GROUP BY EVENT_TYPE
+ORDER BY EVENT_COUNT DESC;
 
 
 -- ユーザーごとのイベント数
-SELECT user_id, COUNT(*) as event_count
-FROM raw_events
-GROUP BY user_id
-ORDER BY event_count DESC
+SELECT USER_ID, COUNT(*) AS EVENT_COUNT
+FROM RAW_EVENTS
+GROUP BY USER_ID
+ORDER BY EVENT_COUNT DESC
 LIMIT 10;
 
 
 -- デバイス種別ごとのセッション統計
 SELECT
-    device_type,
-    COUNT(*) as session_count,
-    ROUND(AVG(page_views), 2) as avg_page_views,
-    MAX(page_views) as max_page_views
-FROM sessions
-GROUP BY device_type;
+    DEVICE_TYPE,
+    COUNT(*) AS SESSION_COUNT,
+    ROUND(AVG(PAGE_VIEWS), 2) AS AVG_PAGE_VIEWS,
+    MAX(PAGE_VIEWS) AS MAX_PAGE_VIEWS
+FROM SESSIONS
+GROUP BY DEVICE_TYPE;
 
 
-SELECT '✓ データロード完了' AS message;
+SELECT '✓ データロード完了' AS MESSAGE;

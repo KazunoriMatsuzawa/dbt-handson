@@ -4,20 +4,20 @@ Staging Model: stg_users
 ================================================================================
 
 【目的】
-  ユーザーマスタ（users）を前処理します。
+  ユーザーマスタ（USERS）を前処理します。
   - カラム名の標準化
   - データ型の統一
   - セグメンテーション情報の追加
 
 【特性】
   - Materialization: VIEW（軽量）
-  - 対象テーブル: users
-  - 出力カラム数: users + セグメンテーション
+  - 対象テーブル: USERS
+  - 出力カラム数: USERS + セグメンテーション
 
 【ビジネス要件】
   - プランタイプは free or premium
-  - is_active フラグで非アクティブユーザーを識別
-  - user_segment を計算
+  - IS_ACTIVE フラグで非アクティブユーザーを識別
+  - USER_SEGMENT を計算
 
 【出力】
   ref('stg_users') で参照可能
@@ -32,31 +32,31 @@ Staging Model: stg_users
 WITH source_users AS (
     -- ステップ1：ソーステーブルからデータを抽出
     SELECT
-        user_id,
-        signup_date,
-        country,
-        plan_type,
-        is_active,
-        updated_at
-    FROM {{ source('analytics', 'users') }}
+        USER_ID,
+        SIGNUP_DATE,
+        COUNTRY,
+        PLAN_TYPE,
+        IS_ACTIVE,
+        UPDATED_AT
+    FROM {{ source('analytics', 'USERS') }}
 ),
 
 enriched_users AS (
     -- ステップ2：セグメンテーション情報を追加
     SELECT
-        user_id,
-        signup_date,
-        UPPER(COALESCE(country, 'XX')) AS country,
-        LOWER(plan_type) AS plan_type,
-        is_active,
-        updated_at,
+        USER_ID,
+        SIGNUP_DATE,
+        UPPER(COALESCE(COUNTRY, 'XX')) AS COUNTRY,
+        LOWER(PLAN_TYPE) AS PLAN_TYPE,
+        IS_ACTIVE,
+        UPDATED_AT,
 
         -- ステップ3：計算カラム（マクロを使ってDRY原則を実践）
-        DATEDIFF(day, signup_date, CURRENT_DATE()) AS days_since_signup,
-        -- マクロで user_segment を生成（common_logic.sql で定義）
-        {{ user_segment_generator('plan_type', 'is_active') }} AS user_segment,
+        DATEDIFF(day, SIGNUP_DATE, CURRENT_DATE()) AS DAYS_SINCE_SIGNUP,
+        -- マクロで USER_SEGMENT を生成（common_logic.sql で定義）
+        {{ user_segment_generator('PLAN_TYPE', 'IS_ACTIVE') }} AS USER_SEGMENT,
         -- マクロでコホートを生成（common_logic.sql で定義）
-        {{ cohort_generator('signup_date') }} AS cohort
+        {{ cohort_generator('SIGNUP_DATE') }} AS COHORT
     FROM source_users
 )
 

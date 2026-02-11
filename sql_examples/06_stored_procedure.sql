@@ -28,37 +28,37 @@
 -- =====================================================================
 -- 注意：プロシジャを定義・実行する前に、参照先テーブルが必要です
 
-CREATE OR REPLACE TABLE daily_summary (
-    event_date DATE,
-    event_count INTEGER,
-    unique_users INTEGER,
-    unique_sessions INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
+CREATE OR REPLACE TABLE DAILY_SUMMARY (
+    EVENT_DATE DATE,
+    EVENT_COUNT INTEGER,
+    UNIQUE_USERS INTEGER,
+    UNIQUE_SESSIONS INTEGER,
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
 );
 
-CREATE OR REPLACE TABLE daily_summary_by_country (
-    event_date DATE,
-    country VARCHAR,
-    event_count INTEGER,
-    unique_users INTEGER,
-    purchase_count INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
+CREATE OR REPLACE TABLE DAILY_SUMMARY_BY_COUNTRY (
+    EVENT_DATE DATE,
+    COUNTRY VARCHAR,
+    EVENT_COUNT INTEGER,
+    UNIQUE_USERS INTEGER,
+    PURCHASE_COUNT INTEGER,
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
 );
 
-CREATE OR REPLACE TABLE weekly_summary (
-    week_start DATE,
-    week_end DATE,
-    event_count INTEGER,
-    unique_users INTEGER,
-    purchase_count INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
+CREATE OR REPLACE TABLE WEEKLY_SUMMARY (
+    WEEK_START DATE,
+    WEEK_END DATE,
+    EVENT_COUNT INTEGER,
+    UNIQUE_USERS INTEGER,
+    PURCHASE_COUNT INTEGER,
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
 );
 
-CREATE OR REPLACE TABLE active_users (
-    user_id INTEGER,
-    last_event_date DATE,
-    total_events INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
+CREATE OR REPLACE TABLE ACTIVE_USERS (
+    USER_ID INTEGER,
+    LAST_EVENT_DATE DATE,
+    TOTAL_EVENTS INTEGER,
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
 );
 
 
@@ -73,22 +73,22 @@ AS
 $$
 BEGIN
     -- ステップ1：既存テーブルをクリア（あれば）
-    DELETE FROM daily_summary;
+    DELETE FROM DAILY_SUMMARY;
 
     -- ステップ2：日別集計を挿入
-    INSERT INTO daily_summary (
-        event_date,
-        event_count,
-        unique_users,
-        unique_sessions
+    INSERT INTO DAILY_SUMMARY (
+        EVENT_DATE,
+        EVENT_COUNT,
+        UNIQUE_USERS,
+        UNIQUE_SESSIONS
     )
     SELECT
-        DATE(event_timestamp) AS event_date,
-        COUNT(*) AS event_count,
-        COUNT(DISTINCT user_id) AS unique_users,
-        COUNT(DISTINCT session_id) AS unique_sessions
-    FROM raw_events
-    GROUP BY DATE(event_timestamp);
+        DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+        COUNT(*) AS EVENT_COUNT,
+        COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
+        COUNT(DISTINCT SESSION_ID) AS UNIQUE_SESSIONS
+    FROM RAW_EVENTS
+    GROUP BY DATE(EVENT_TIMESTAMP);
 
     -- ステップ3：完了メッセージを返す
     RETURN '✓ Daily summary calculation completed successfully';
@@ -131,23 +131,23 @@ AS
 $$
 BEGIN
     -- 指定国のデータのみ処理
-    INSERT INTO daily_summary_by_country (
-        event_date,
-        country,
-        event_count,
-        unique_users,
-        purchase_count
+    INSERT INTO DAILY_SUMMARY_BY_COUNTRY (
+        EVENT_DATE,
+        COUNTRY,
+        EVENT_COUNT,
+        UNIQUE_USERS,
+        PURCHASE_COUNT
     )
     SELECT
-        DATE(e.event_timestamp) AS event_date,
-        p_country AS country,
-        COUNT(*) AS event_count,
-        COUNT(DISTINCT e.user_id) AS unique_users,
-        COUNT(DISTINCT CASE WHEN e.event_type = 'purchase' THEN e.event_id END) AS purchase_count
-    FROM raw_events e
-    INNER JOIN users u ON e.user_id = u.user_id
-    WHERE u.country = p_country
-    GROUP BY DATE(e.event_timestamp);
+        DATE(e.EVENT_TIMESTAMP) AS EVENT_DATE,
+        p_country AS COUNTRY,
+        COUNT(*) AS EVENT_COUNT,
+        COUNT(DISTINCT e.USER_ID) AS UNIQUE_USERS,
+        COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END) AS PURCHASE_COUNT
+    FROM RAW_EVENTS e
+    INNER JOIN USERS u ON e.USER_ID = u.USER_ID
+    WHERE u.COUNTRY = p_country
+    GROUP BY DATE(e.EVENT_TIMESTAMP);
 
     RETURN '✓ Processing completed for country: ' || p_country;
 END;
@@ -184,27 +184,27 @@ DECLARE
     v_status_message VARCHAR;
 BEGIN
     -- ステップ1：既存テーブルをクリア
-    DELETE FROM daily_summary;
+    DELETE FROM DAILY_SUMMARY;
 
     -- ステップ2：集計実行
-    INSERT INTO daily_summary (
-        event_date,
-        event_count,
-        unique_users
+    INSERT INTO DAILY_SUMMARY (
+        EVENT_DATE,
+        EVENT_COUNT,
+        UNIQUE_USERS
     )
     SELECT
-        DATE(event_timestamp) AS event_date,
-        COUNT(*) AS event_count,
-        COUNT(DISTINCT user_id) AS unique_users
-    FROM raw_events
-    GROUP BY DATE(event_timestamp);
+        DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+        COUNT(*) AS EVENT_COUNT,
+        COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
+    FROM RAW_EVENTS
+    GROUP BY DATE(EVENT_TIMESTAMP);
 
     -- ステップ3：挿入件数を取得
-    SELECT COUNT(*) INTO v_record_count FROM daily_summary;
+    SELECT COUNT(*) INTO v_record_count FROM DAILY_SUMMARY;
 
     -- ステップ4：今日のイベント数を取得
-    SELECT COUNT(*) INTO v_today_events FROM raw_events
-    WHERE DATE(event_timestamp) = CURRENT_DATE();
+    SELECT COUNT(*) INTO v_today_events FROM RAW_EVENTS
+    WHERE DATE(EVENT_TIMESTAMP) = CURRENT_DATE();
 
     -- ステップ5：バリデーション
     IF v_record_count > 0 THEN
@@ -265,52 +265,52 @@ BEGIN
     SET v_start_time = CURRENT_TIMESTAMP();
 
     -- ========== ステップ1：日別集計テーブルを更新 ==========
-    TRUNCATE TABLE daily_summary;
+    TRUNCATE TABLE DAILY_SUMMARY;
 
-    INSERT INTO daily_summary (event_date, event_count, unique_users)
+    INSERT INTO DAILY_SUMMARY (EVENT_DATE, EVENT_COUNT, UNIQUE_USERS)
     SELECT
-        DATE(event_timestamp) AS event_date,
-        COUNT(*) AS event_count,
-        COUNT(DISTINCT user_id) AS unique_users
-    FROM raw_events
-    GROUP BY DATE(event_timestamp);
+        DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+        COUNT(*) AS EVENT_COUNT,
+        COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
+    FROM RAW_EVENTS
+    GROUP BY DATE(EVENT_TIMESTAMP);
 
-    SELECT COUNT(*) INTO v_step_1_rows FROM daily_summary;
+    SELECT COUNT(*) INTO v_step_1_rows FROM DAILY_SUMMARY;
 
     -- ========== ステップ2：週別集計テーブルを更新 ==========
-    TRUNCATE TABLE weekly_summary;
+    TRUNCATE TABLE WEEKLY_SUMMARY;
 
-    INSERT INTO weekly_summary (
-        week_start,
-        week_end,
-        event_count,
-        unique_users,
-        purchase_count
+    INSERT INTO WEEKLY_SUMMARY (
+        WEEK_START,
+        WEEK_END,
+        EVENT_COUNT,
+        UNIQUE_USERS,
+        PURCHASE_COUNT
     )
     SELECT
-        DATE_TRUNC('WEEK', event_timestamp) AS week_start,
-        DATEADD(day, 6, DATE_TRUNC('WEEK', event_timestamp)) AS week_end,
-        COUNT(*) AS event_count,
-        COUNT(DISTINCT user_id) AS unique_users,
-        COUNT(DISTINCT CASE WHEN event_type = 'purchase' THEN event_id END) AS purchase_count
-    FROM raw_events
-    GROUP BY DATE_TRUNC('WEEK', event_timestamp);
+        DATE_TRUNC('WEEK', EVENT_TIMESTAMP) AS WEEK_START,
+        DATEADD(day, 6, DATE_TRUNC('WEEK', EVENT_TIMESTAMP)) AS WEEK_END,
+        COUNT(*) AS EVENT_COUNT,
+        COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
+        COUNT(DISTINCT CASE WHEN EVENT_TYPE = 'purchase' THEN EVENT_ID END) AS PURCHASE_COUNT
+    FROM RAW_EVENTS
+    GROUP BY DATE_TRUNC('WEEK', EVENT_TIMESTAMP);
 
-    SELECT COUNT(*) INTO v_step_2_rows FROM weekly_summary;
+    SELECT COUNT(*) INTO v_step_2_rows FROM WEEKLY_SUMMARY;
 
     -- ========== ステップ3：アクティブユーザーテーブルを更新 ==========
-    TRUNCATE TABLE active_users;
+    TRUNCATE TABLE ACTIVE_USERS;
 
-    INSERT INTO active_users (user_id, last_event_date, total_events)
+    INSERT INTO ACTIVE_USERS (USER_ID, LAST_EVENT_DATE, TOTAL_EVENTS)
     SELECT
-        user_id,
-        MAX(DATE(event_timestamp)) AS last_event_date,
-        COUNT(*) AS total_events
-    FROM raw_events
-    WHERE DATE(event_timestamp) >= DATEADD(day, -30, CURRENT_DATE())
-    GROUP BY user_id;
+        USER_ID,
+        MAX(DATE(EVENT_TIMESTAMP)) AS LAST_EVENT_DATE,
+        COUNT(*) AS TOTAL_EVENTS
+    FROM RAW_EVENTS
+    WHERE DATE(EVENT_TIMESTAMP) >= DATEADD(day, -30, CURRENT_DATE())
+    GROUP BY USER_ID;
 
-    SELECT COUNT(*) INTO v_step_3_rows FROM active_users;
+    SELECT COUNT(*) INTO v_step_3_rows FROM ACTIVE_USERS;
 
     -- ========== ステップ4：実行時間を計算 ==========
     SET v_end_time = CURRENT_TIMESTAMP();
@@ -355,15 +355,15 @@ BEGIN
 
     BEGIN
         -- リスキーな操作をTRY-CATCH で囲む
-        DELETE FROM daily_summary WHERE 1=1;  -- 全行削除
+        DELETE FROM DAILY_SUMMARY WHERE 1=1;  -- 全行削除
 
-        INSERT INTO daily_summary (event_date, event_count, unique_users)
+        INSERT INTO DAILY_SUMMARY (EVENT_DATE, EVENT_COUNT, UNIQUE_USERS)
         SELECT
-            DATE(event_timestamp) AS event_date,
-            COUNT(*) AS event_count,
-            COUNT(DISTINCT user_id) AS unique_users
-        FROM raw_events
-        GROUP BY DATE(event_timestamp);
+            DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+            COUNT(*) AS EVENT_COUNT,
+            COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
+        FROM RAW_EVENTS
+        GROUP BY DATE(EVENT_TIMESTAMP);
 
         -- 成功時
         RETURN '✓ Data update completed successfully';
@@ -406,7 +406,7 @@ CALL sp_safe_data_update();
    ✓ 処理を分割して複数プロシジャに分ける
 
 2. ハードコーディング（固定値の埋め込み）
-   ❌ WHERE event_timestamp >= '2025-12-01'
+   ❌ WHERE EVENT_TIMESTAMP >= '2025-12-01'
    ✓ パラメータ化：DATEADD(day, -30, CURRENT_DATE())
 
 3. テスト困難なロジック（副作用のある処理）

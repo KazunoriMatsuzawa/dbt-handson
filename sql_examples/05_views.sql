@@ -24,18 +24,18 @@
 -- VIEW1：シンプルなビューの作成
 -- =====================================================================
 
-CREATE OR REPLACE VIEW v_daily_events AS
+CREATE OR REPLACE VIEW V_DAILY_EVENTS AS
 SELECT
-    DATE(event_timestamp) AS event_date,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT user_id) AS unique_users,
-    COUNT(DISTINCT session_id) AS unique_sessions
-FROM raw_events
-GROUP BY DATE(event_timestamp);
+    DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
+    COUNT(DISTINCT SESSION_ID) AS UNIQUE_SESSIONS
+FROM RAW_EVENTS
+GROUP BY DATE(EVENT_TIMESTAMP);
 
 -- ビューの確認
-SELECT * FROM v_daily_events
-ORDER BY event_date DESC;
+SELECT * FROM V_DAILY_EVENTS
+ORDER BY EVENT_DATE DESC;
 
 /*
 【VIEW の特性】
@@ -55,27 +55,27 @@ ORDER BY event_date DESC;
 -- VIEW2：JOINを含むビュー
 -- =====================================================================
 
-CREATE OR REPLACE VIEW v_events_with_user_info AS
+CREATE OR REPLACE VIEW V_EVENTS_WITH_USER_INFO AS
 SELECT
-    e.event_id,
-    e.user_id,
-    e.event_type,
-    e.event_timestamp,
-    e.device_type,
-    u.country,
-    u.plan_type,
-    u.is_active,
+    e.EVENT_ID,
+    e.USER_ID,
+    e.EVENT_TYPE,
+    e.EVENT_TIMESTAMP,
+    e.DEVICE_TYPE,
+    u.COUNTRY,
+    u.PLAN_TYPE,
+    u.IS_ACTIVE,
     CASE
-        WHEN u.plan_type = 'premium' THEN 'Premium User'
+        WHEN u.PLAN_TYPE = 'premium' THEN 'Premium User'
         ELSE 'Free User'
-    END AS user_segment
-FROM raw_events e
-INNER JOIN users u
-    ON e.user_id = u.user_id;
+    END AS USER_SEGMENT
+FROM RAW_EVENTS e
+INNER JOIN USERS u
+    ON e.USER_ID = u.USER_ID;
 
 -- ビューの使用
-SELECT * FROM v_events_with_user_info
-WHERE event_type = 'purchase'
+SELECT * FROM V_EVENTS_WITH_USER_INFO
+WHERE EVENT_TYPE = 'purchase'
 LIMIT 20;
 
 /*
@@ -94,33 +94,33 @@ LIMIT 20;
 -- VIEW3：複数VIEWを組み合わせる
 -- =====================================================================
 
-CREATE OR REPLACE VIEW v_country_daily_summary AS
+CREATE OR REPLACE VIEW V_COUNTRY_DAILY_SUMMARY AS
 SELECT
-    DATE(e.event_timestamp) AS event_date,
-    u.country,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT e.user_id) AS user_count,
-    COUNT(DISTINCT CASE WHEN e.event_type = 'purchase' THEN e.event_id END) AS purchase_count
-FROM raw_events e
-INNER JOIN users u ON e.user_id = u.user_id
-GROUP BY DATE(e.event_timestamp), u.country;
+    DATE(e.EVENT_TIMESTAMP) AS EVENT_DATE,
+    u.COUNTRY,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT e.USER_ID) AS USER_COUNT,
+    COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END) AS PURCHASE_COUNT
+FROM RAW_EVENTS e
+INNER JOIN USERS u ON e.USER_ID = u.USER_ID
+GROUP BY DATE(e.EVENT_TIMESTAMP), u.COUNTRY;
 
 -- VIEWからのクエリ
 SELECT
-    event_date,
-    country,
-    event_count,
-    user_count,
-    purchase_count,
-    ROUND(purchase_count::FLOAT / user_count, 4) AS purchase_rate
-FROM v_country_daily_summary
-WHERE event_date >= DATEADD(day, -7, CURRENT_DATE())
-ORDER BY event_date DESC, purchase_count DESC;
+    EVENT_DATE,
+    COUNTRY,
+    EVENT_COUNT,
+    USER_COUNT,
+    PURCHASE_COUNT,
+    ROUND(PURCHASE_COUNT::FLOAT / USER_COUNT, 4) AS PURCHASE_RATE
+FROM V_COUNTRY_DAILY_SUMMARY
+WHERE EVENT_DATE >= DATEADD(day, -7, CURRENT_DATE())
+ORDER BY EVENT_DATE DESC, PURCHASE_COUNT DESC;
 
 /*
 VIEWの重要な役割：
-  - ビジネスロジック（country別, 日別集計）をカプセル化
-  - アナリストは purchase_rate の計算に集中できる
+  - ビジネスロジック（COUNTRY別, 日別集計）をカプセル化
+  - アナリストは PURCHASE_RATE の計算に集中できる
   - データ更新後も自動的に最新を反映
 */
 
@@ -138,11 +138,11 @@ VIEWの重要な役割：
    ✓ 2段階までに留める
 
 2. 不要に広い列集合
-   ❌ CREATE VIEW v_all AS SELECT * FROM raw_events;
+   ❌ CREATE VIEW v_all AS SELECT * FROM RAW_EVENTS;
    ✓ 必要なカラムのみ
 
 3. フィルタを含まないVIEW（スキャン範囲が大きい）
-   ❌ CREATE VIEW v_all_events AS SELECT * FROM raw_events;
+   ❌ CREATE VIEW v_all_events AS SELECT * FROM RAW_EVENTS;
    ✓ 日付範囲等でフィルタを含める
 
 4. VIEWのパフォーマンス最適化なし
@@ -154,19 +154,19 @@ VIEWの重要な役割：
 -- MATERIALIZED VIEW（マテリアライズドビュー）
 -- =====================================================================
 
-CREATE OR REPLACE MATERIALIZED VIEW mv_daily_summary AS
+CREATE OR REPLACE MATERIALIZED VIEW MV_DAILY_SUMMARY AS
 SELECT
-    DATE(event_timestamp) AS event_date,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT user_id) AS unique_users,
-    COUNT(DISTINCT session_id) AS unique_sessions,
-    COUNT(DISTINCT CASE WHEN event_type = 'purchase' THEN event_id END) AS purchase_count
-FROM raw_events
-GROUP BY DATE(event_timestamp);
+    DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
+    COUNT(DISTINCT SESSION_ID) AS UNIQUE_SESSIONS,
+    COUNT(DISTINCT CASE WHEN EVENT_TYPE = 'purchase' THEN EVENT_ID END) AS PURCHASE_COUNT
+FROM RAW_EVENTS
+GROUP BY DATE(EVENT_TIMESTAMP);
 
 -- マテビューの確認
-SELECT * FROM mv_daily_summary
-ORDER BY event_date DESC;
+SELECT * FROM MV_DAILY_SUMMARY
+ORDER BY EVENT_DATE DESC;
 
 /*
 【MATERIALIZED VIEW の特性】
@@ -187,11 +187,11 @@ ORDER BY event_date DESC;
 -- =====================================================================
 
 -- マテビューの更新（手動トリガー）
-ALTER MATERIALIZED VIEW mv_daily_summary REFRESH;
+ALTER MATERIALIZED VIEW MV_DAILY_SUMMARY REFRESH;
 
 -- 更新後の確認
-SELECT * FROM mv_daily_summary
-ORDER BY event_date DESC;
+SELECT * FROM MV_DAILY_SUMMARY
+ORDER BY EVENT_DATE DESC;
 
 /*
 【マテビュー更新の方法】
@@ -249,25 +249,25 @@ ORDER BY event_date DESC;
 【ビューを使ったセキュリティ】
 
 例：
-  raw_events テーブルには全カラムがあるが、
-  v_events_with_user_info ビューを通じて参照させる場合
+  RAW_EVENTS テーブルには全カラムがあるが、
+  V_EVENTS_WITH_USER_INFO ビューを通じて参照させる場合
 
-CREATE VIEW v_events_with_user_info AS
+CREATE VIEW V_EVENTS_WITH_USER_INFO AS
 SELECT
-    event_id,      -- 公開OK
-    user_id,       -- 公開OK
-    event_type,    -- 公開OK
-    event_timestamp, -- 公開OK
-    device_type,   -- 公開OK
-    u.country,     -- 公開OK
-    u.plan_type    -- 公開OK
-    -- page_url は非公開（セキュリティ上の理由で除外）
-FROM raw_events e
-INNER JOIN users u ON e.user_id = u.user_id;
+    EVENT_ID,      -- 公開OK
+    USER_ID,       -- 公開OK
+    EVENT_TYPE,    -- 公開OK
+    EVENT_TIMESTAMP, -- 公開OK
+    DEVICE_TYPE,   -- 公開OK
+    u.COUNTRY,     -- 公開OK
+    u.PLAN_TYPE    -- 公開OK
+    -- PAGE_URL は非公開（セキュリティ上の理由で除外）
+FROM RAW_EVENTS e
+INNER JOIN USERS u ON e.USER_ID = u.USER_ID;
 
 このようにしてから：
-  - 直接 raw_events へのアクセス権を制限
-  - v_events_with_user_info へのアクセスのみ許可
+  - 直接 RAW_EVENTS へのアクセス権を制限
+  - V_EVENTS_WITH_USER_INFO へのアクセスのみ許可
 
 結果：セキュアなデータアクセスが実現
 */
@@ -281,16 +281,16 @@ INNER JOIN users u ON e.user_id = u.user_id;
 SHOW VIEWS;
 
 -- 特定ビューの定義確認
-DESCRIBE VIEW v_daily_events;
+DESCRIBE VIEW V_DAILY_EVENTS;
 
 -- ビューのコード確認（Snowflake独自コマンド）
-SELECT GET_DDL('VIEW', 'v_daily_events');
+SELECT GET_DDL('VIEW', 'V_DAILY_EVENTS');
 
 -- ビュー削除（必要に応じて）
--- DROP VIEW v_daily_events;
+-- DROP VIEW V_DAILY_EVENTS;
 
 -- マテビュー削除（必要に応じて）
--- DROP MATERIALIZED VIEW mv_daily_summary;
+-- DROP MATERIALIZED VIEW MV_DAILY_SUMMARY;
 
 
 -- =====================================================================
@@ -307,16 +307,16 @@ SELECT GET_DDL('VIEW', 'v_daily_events');
   - 依存関係の自動管理
 
 構文（参考）：
-CREATE OR REPLACE DYNAMIC TABLE dt_daily_summary
+CREATE OR REPLACE DYNAMIC TABLE DT_DAILY_SUMMARY
 LAG = '1 day'  -- 更新頻度：1日ごと
 WAREHOUSE = compute_wh
 AS
 SELECT
-    DATE(event_timestamp) AS event_date,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT user_id) AS unique_users
-FROM raw_events
-GROUP BY DATE(event_timestamp);
+    DATE(EVENT_TIMESTAMP) AS EVENT_DATE,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT USER_ID) AS UNIQUE_USERS
+FROM RAW_EVENTS
+GROUP BY DATE(EVENT_TIMESTAMP);
 
 注：
   本ハンズオンでは実装しませんが、
@@ -332,8 +332,8 @@ GROUP BY DATE(event_timestamp);
 【推奨】
 
 1. ビュー名は明確で説明的に
-   ✓ v_daily_user_events (何の日別集計か明確)
-   ✓ mv_country_summary (マテビューであることが分かる)
+   ✓ V_DAILY_USER_EVENTS (何の日別集計か明確)
+   ✓ MV_COUNTRY_SUMMARY (マテビューであることが分かる)
    ❌ v_x (意味不明)
    ❌ summary (ビューか元テーブルか不明)
 
@@ -364,46 +364,46 @@ GROUP BY DATE(event_timestamp);
 -- =====================================================================
 
 -- 【ケース1】リアルタイムで最新イベントを確認したい
-CREATE OR REPLACE VIEW v_latest_events AS
+CREATE OR REPLACE VIEW V_LATEST_EVENTS AS
 SELECT
-    event_id,
-    user_id,
-    event_type,
-    event_timestamp
-FROM raw_events
-WHERE event_timestamp >= DATEADD(hour, -1, CURRENT_TIMESTAMP())
-ORDER BY event_timestamp DESC;
+    EVENT_ID,
+    USER_ID,
+    EVENT_TYPE,
+    EVENT_TIMESTAMP
+FROM RAW_EVENTS
+WHERE EVENT_TIMESTAMP >= DATEADD(hour, -1, CURRENT_TIMESTAMP())
+ORDER BY EVENT_TIMESTAMP DESC;
 
 -- 参照：毎回最新のデータを取得
-SELECT * FROM v_latest_events LIMIT 20;
+SELECT * FROM V_LATEST_EVENTS LIMIT 20;
 
 
 -- 【ケース2】複雑な日別集計をよく参照する（パフォーマンス重視）
-CREATE OR REPLACE MATERIALIZED VIEW mv_daily_performance AS
+CREATE OR REPLACE MATERIALIZED VIEW MV_DAILY_PERFORMANCE AS
 SELECT
-    DATE(e.event_timestamp) AS event_date,
-    u.country,
-    u.plan_type,
-    COUNT(*) AS event_count,
-    COUNT(DISTINCT e.user_id) AS user_count,
-    COUNT(DISTINCT CASE WHEN e.event_type = 'purchase' THEN e.event_id END) AS purchase_count,
-    ROUND(COUNT(*)::FLOAT / COUNT(DISTINCT e.user_id), 2) AS avg_events_per_user,
+    DATE(e.EVENT_TIMESTAMP) AS EVENT_DATE,
+    u.COUNTRY,
+    u.PLAN_TYPE,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT e.USER_ID) AS USER_COUNT,
+    COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END) AS PURCHASE_COUNT,
+    ROUND(COUNT(*)::FLOAT / COUNT(DISTINCT e.USER_ID), 2) AS AVG_EVENTS_PER_USER,
     ROUND(
-        COUNT(DISTINCT CASE WHEN e.event_type = 'purchase' THEN e.event_id END)::FLOAT /
-        COUNT(DISTINCT e.user_id),
+        COUNT(DISTINCT CASE WHEN e.EVENT_TYPE = 'purchase' THEN e.EVENT_ID END)::FLOAT /
+        COUNT(DISTINCT e.USER_ID),
         4
-    ) AS purchase_rate
-FROM raw_events e
-INNER JOIN users u ON e.user_id = u.user_id
-GROUP BY DATE(e.event_timestamp), u.country, u.plan_type;
+    ) AS PURCHASE_RATE
+FROM RAW_EVENTS e
+INNER JOIN USERS u ON e.USER_ID = u.USER_ID
+GROUP BY DATE(e.EVENT_TIMESTAMP), u.COUNTRY, u.PLAN_TYPE;
 
 -- 参照：事前計算されたデータを即座に返す
-SELECT * FROM mv_daily_performance
-WHERE event_date >= DATEADD(day, -7, CURRENT_DATE())
-ORDER BY event_date DESC, purchase_count DESC;
+SELECT * FROM MV_DAILY_PERFORMANCE
+WHERE EVENT_DATE >= DATEADD(day, -7, CURRENT_DATE())
+ORDER BY EVENT_DATE DESC, PURCHASE_COUNT DESC;
 
 -- 更新（定期的に実行：タスクで自動化）
-ALTER MATERIALIZED VIEW mv_daily_performance REFRESH;
+ALTER MATERIALIZED VIEW MV_DAILY_PERFORMANCE REFRESH;
 
 /*
 このセクションで学んだポイント：

@@ -37,7 +37,7 @@ dbt on Snowflake - プロジェクト実行コマンド集
 【Snowflake Task での実行方法】
 
   CREATE TASK task_name
-  WAREHOUSE = dbt_wh
+  WAREHOUSE = DBT_WH
   SCHEDULE = '...'
   AS
   EXECUTE DBT PROJECT project_name COMMAND = 'dbt run';
@@ -133,8 +133,8 @@ dbt run
      int_daily_events (VIEW)
 
   3. marts レイヤー
-     daily_summary (TABLE)
-     weekly_summary (TABLE)
+     DAILY_SUMMARY (TABLE)
+     WEEKLY_SUMMARY (TABLE)
 
 【出力例】
   Running with dbt version X.X.X
@@ -162,8 +162,8 @@ dbt run -s stg_events
 
 【使用例】
   dbt run -s staging  # staging レイヤーのみ
-  dbt run -s daily_summary  # daily_summary とその依存モデル
-  dbt run -s +daily_summary  # daily_summary と上流依存（依存元）
+  dbt run -s daily_summary  # DAILY_SUMMARY とその依存モデル
+  dbt run -s +daily_summary  # DAILY_SUMMARY と上流依存（依存元）
 
 【演算子】
   stg_events           ← 単一モデル
@@ -212,13 +212,13 @@ dbt test
 
 【テスト内容（本プロジェクト）】
   1. ソースデータテスト
-     - raw_events, users の主キー一意性
+     - RAW_EVENTS, USERS の主キー一意性
      - 必須フィールドの NULL チェック
      - イベント種別の値チェック
 
   2. ステージングモデルテスト
-     - stg_events の event_id 一意性
-     - stg_users の user_id 一意性
+     - stg_events の EVENT_ID 一意性
+     - stg_users の USER_ID 一意性
      - ファネルステージの値チェック
 
   3. マートモデルテスト
@@ -226,9 +226,9 @@ dbt test
      - データ鮮度チェック
 
 【出力例】
-  Executing test unique_stg_events_event_id
+  Executing test unique_stg_events_EVENT_ID
   PASS
-  Executing test not_null_raw_events_user_id
+  Executing test not_null_RAW_EVENTS_USER_ID
   PASS
   ...
 
@@ -271,7 +271,7 @@ dbt docs generate
      - モデル間の依存関係図
 
   4. Sources
-     - raw_events, users, sessions
+     - RAW_EVENTS, USERS, SESSIONS
 */
 
 
@@ -296,7 +296,7 @@ dbt snapshot
 
   {% snapshot users_snapshot %}
     SELECT *
-    FROM {{ source('analytics', 'users') }}
+    FROM {{ source('analytics', 'USERS') }}
   {% endsnapshot %}
 
   実行：dbt snapshot
@@ -319,15 +319,15 @@ dbt source freshness
   sources:
     - name: analytics
       tables:
-        - name: raw_events
+        - name: RAW_EVENTS
           freshness:
             warn_after: {count: 12, period: hour}
             error_after: {count: 24, period: hour}
-          loaded_at_field: created_at
+          loaded_at_field: CREATED_AT
 
 【実行結果例】
-  Executing freshness check for database.schema.raw_events
-  WARNING: The freshness check for table "raw_events" has failed.
+  Executing freshness check for database.schema.RAW_EVENTS
+  WARNING: The freshness check for table "RAW_EVENTS" has failed.
 
 【利用例】
   - ソースデータの定期更新確認
@@ -378,7 +378,7 @@ dbt build
 
 【エラー：Warehouse suspended】
   原因：ウェアハウスが一時停止している
-  解決：ALTER WAREHOUSE dbt_wh RESUME;
+  解決：ALTER WAREHOUSE DBT_WH RESUME;
 
 【エラー：Git authentication failed】
   原因：Git リポジトリの認証情報が正しくない
@@ -399,13 +399,13 @@ dbt build
   Snowflake Web UI → Query History で dbt が発行した SQL を確認
 
 【メモリ使用量の確認】
-  SELECT * FROM snowflake.account_usage.query_history
+  SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
   WHERE DATABASE_NAME = 'ANALYTICS'
   AND QUERY_START_TIME > CURRENT_DATE() - 7
   ORDER BY START_TIME DESC;
 
 【ウェアハウス利用料の確認】
-  SELECT * FROM snowflake.account_usage.warehouse_metering_history
+  SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
   WHERE WAREHOUSE_NAME = 'DBT_WH'
   ORDER BY START_TIME DESC;
 
@@ -422,35 +422,35 @@ dbt build
 
 /*
 【毎日実行】
-CREATE OR REPLACE TASK dbt_daily_run
-WAREHOUSE = dbt_wh
+CREATE OR REPLACE TASK DBT_DAILY_RUN
+WAREHOUSE = DBT_WH
 SCHEDULE = 'USING CRON 0 1 * * * UTC'
 AS
 EXECUTE DBT PROJECT analytics_web_events COMMAND = 'dbt run';
 
-ALTER TASK dbt_daily_run RESUME;
+ALTER TASK DBT_DAILY_RUN RESUME;
 
 【テスト実行（毎日、実行後）】
-CREATE OR REPLACE TASK dbt_daily_test
-WAREHOUSE = dbt_wh
-AFTER dbt_daily_run
+CREATE OR REPLACE TASK DBT_DAILY_TEST
+WAREHOUSE = DBT_WH
+AFTER DBT_DAILY_RUN
 AS
 EXECUTE DBT PROJECT analytics_web_events COMMAND = 'dbt test';
 
-ALTER TASK dbt_daily_test RESUME;
+ALTER TASK DBT_DAILY_TEST RESUME;
 
 【ドキュメント更新（週1回）】
-CREATE OR REPLACE TASK dbt_weekly_docs
-WAREHOUSE = dbt_wh
+CREATE OR REPLACE TASK DBT_WEEKLY_DOCS
+WAREHOUSE = DBT_WH
 SCHEDULE = 'USING CRON 0 2 * * 1 UTC'
 AS
 EXECUTE DBT PROJECT analytics_web_events COMMAND = 'dbt docs generate';
 
-ALTER TASK dbt_weekly_docs RESUME;
+ALTER TASK DBT_WEEKLY_DOCS RESUME;
 
 【タスク実行履歴確認】
 SELECT *
-FROM TABLE(INFORMATION_SCHEMA.TASK_HISTORY(TASK_NAME => 'dbt_daily_run'))
+FROM TABLE(INFORMATION_SCHEMA.TASK_HISTORY(TASK_NAME => 'DBT_DAILY_RUN'))
 ORDER BY SCHEDULED_TIME DESC
 LIMIT 10;
 */
@@ -476,16 +476,16 @@ LIMIT 10;
 
 【本番環境】
   1. 定時実行タスク設定（深夜実行）
-     CREATE TASK dbt_prod_run ...
+     CREATE TASK DBT_PROD_RUN ...
 
   2. テスト自動実行
-     CREATE TASK dbt_prod_test AFTER dbt_prod_run ...
+     CREATE TASK DBT_PROD_TEST AFTER DBT_PROD_RUN ...
 
   3. エラー通知設定
      ... (Snowflake Alert 機能)
 
   4. ドキュメント自動更新
-     CREATE TASK dbt_prod_docs ...
+     CREATE TASK DBT_PROD_DOCS ...
 
 【モニタリング】
   - Snowflake Query History
@@ -509,16 +509,16 @@ LIMIT 10;
 
 【本番環境での確認コマンド】
   SELECT
-    model_name,
-    execution_time,
-    row_count,
-    status
-  FROM analytics.dbt_metadata.dbt_execution_log
-  WHERE execution_id = 'latest'
-  ORDER BY execution_time DESC;
+    MODEL_NAME,
+    EXECUTION_TIME,
+    ROW_COUNT,
+    STATUS
+  FROM ANALYTICS.DBT_METADATA.DBT_EXECUTION_LOG
+  WHERE EXECUTION_ID = 'latest'
+  ORDER BY EXECUTION_TIME DESC;
 */
 
-SELECT '✓ dbt on Snowflake コマンド実行準備完了' AS message;
+SELECT '✓ dbt on Snowflake コマンド実行準備完了' AS MESSAGE;
 -- 次のステップ：
 --   1. Snowflake Web UI → Projects
 --   2. Terminal で dbt deps を実行
