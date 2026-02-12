@@ -4,8 +4,8 @@ version: 2
 # ソース定義：Snowflake 内の生データテーブル
 # =====================================================================
 sources:
-  - name: analytics
-    description: "分析用の基本データソース"
+  - name: raw_data
+    description: "Snowflake上の生データソース（DBT_HANDSONスキーマ）"
     database: DIESELPJ_TEST
     schema: DBT_HANDSON
     tables:
@@ -83,7 +83,7 @@ sources:
             tests:
               - not_null
               - relationships:
-                  to: source('analytics', 'USERS')
+                  to: source('raw_data', 'USERS')
                   field: USER_ID
           - name: SESSION_START
             description: "セッション開始時刻"

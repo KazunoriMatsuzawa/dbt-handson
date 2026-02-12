@@ -38,7 +38,7 @@ WITH source_users AS (
         PLAN_TYPE,
         IS_ACTIVE,
         UPDATED_AT
-    FROM {{ source('analytics', 'USERS') }}
+    FROM {{ source('raw_data', 'USERS') }}
 ),
 
 enriched_users AS (

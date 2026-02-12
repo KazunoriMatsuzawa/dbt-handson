@@ -30,7 +30,7 @@ WITH source_users AS (
         COUNTRY,
         PLAN_TYPE,
         IS_ACTIVE
-    FROM {{ source('analytics', 'USERS') }}
+    FROM {{ source('raw_data', 'USERS') }}
 ),
 
 cleaned_users AS (

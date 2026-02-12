@@ -32,7 +32,7 @@ WITH source_events AS (
         EVENT_TIMESTAMP,
         DEVICE_TYPE,
         COUNTRY
-    FROM {{ source('analytics', 'RAW_EVENTS') }}
+    FROM {{ source('raw_data', 'RAW_EVENTS') }}
 ),
 
 cleaned_events AS (
