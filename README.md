@@ -281,25 +281,6 @@ GRANT EXECUTE DBT PROJECT ON ACCOUNT TO ROLE [your_role];
 ---
 
 ## トラブルシューティング
-
-### エラー：「Database does not exist」
-
-```sql
-CREATE DATABASE analytics;
-```
-
-### エラー：「Insufficient privileges」
-
-```sql
-GRANT USAGE ON DATABASE analytics TO ROLE [your_role];
-GRANT USAGE ON WAREHOUSE dbt_wh TO ROLE [your_role];
-GRANT CREATE TABLE ON SCHEMA analytics.staging TO ROLE [your_role];
-```
-
-### エラー：「Warehouse suspended」
-
-```sql
-ALTER WAREHOUSE dbt_wh RESUME;
 ```
 
 ### エラー：「Git authentication failed」

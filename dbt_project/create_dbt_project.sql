@@ -22,7 +22,7 @@ dbt on Snowflake - 実環境セットアップ
 -- ステップ1：既存環境の確認
 -- =====================================================================
 
-USE ROLE SANDSHREW_ADMIN;
+USE ROLE SANDSHREW_PUBLIC;
 USE WAREHOUSE COMPUTE_WH;
 USE DATABASE DIESELPJ_TEST;
 
