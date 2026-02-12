@@ -1,4 +1,4 @@
-# SQL & dbt ハンズオンレクチャー
+# SQL & dbt ハンズオン（初心者コース）
 
 Snowflakeを使用したデータ分析の基礎から応用まで、実務で必要なスキルを習得するハンズオンプロジェクトです。
 
@@ -9,13 +9,9 @@ Snowflakeを使用したデータ分析の基礎から応用まで、実務で�
 
 ### コース構成
 
-本ハンズオンは **初心者コース** と **中級者コース** の2コースで構成されています。
-各コースとも「1コマ目=SQL、2コマ目=dbt」の構成で、dbtの良さを体験できます。
-
 | コース | 対象者 | コマ数 | 内容 |
 |--------|--------|--------|------|
 | **初心者コース** | SQL未経験〜初心者 | 2コマ（90分） | SQL基礎＋応用エッセンス + dbt入門 |
-| **中級者コース** | SQL基礎を習得済み | 2コマ（90分） | SQL詳細マスター + dbt実践 |
 
 ---
 
@@ -41,73 +37,36 @@ Snowflakeを使用したデータ分析の基礎から応用まで、実務で�
 
 ---
 
-### 中級者コース（2コマ / 90分）
-
-**対象者**
-- SQL基礎（SELECT, JOIN, GROUP BY）を習得済みの方
-- データパイプラインの構築に興味がある方
-
-**学習目標**
-1. SELECT/JOIN/GROUP BY の応用パターン（Window関数、FULL OUTER JOIN等）を習得
-2. CTE、VIEW、ストアドプロシジャ、タスクを詳細に学ぶ
-3. dbtのIntermediate層、Macros、高度テストを実践
-4. SP+Task の複雑さ vs `dbt run` の簡潔さを実感
-
-**カリキュラム**
-
-| コマ | 時間 | 内容 |
-|------|------|------|
-| **1コマ目：SQL詳細マスター** | 45分 | SQL応用パターン（10分）→ CTEマスター（10分）→ VIEW/DYNAMIC TABLE（8分）→ SP+Taskパイプライン（12分）→ まとめ（5分） |
-| **2コマ目：dbt実践** | 45分 | Intermediate層（10分）→ Macros/DRY原則（10分）→ Weekly Summary+Window関数（10分）→ 高度テスト+ドキュメント（10分）→ SP+Task→dbt比較（5分） |
-
----
-
 ## ディレクトリ構成
 
 ```
 .
 ├── README.md                              ← このファイル
-├── 説明資料.md                            ← 詳細な講座資料
+├── 説明資料.md                            ← 詳細な講座資料（初心者コース）
 ├── dataset/                               ← データセット
-│   ├── create_tables.sql                 # Snowflakeテーブル定義
-│   ├── generate_data.py                  # ダミーデータ生成スクリプト
-│   └── load_data.sql                     # データロードスクリプト
-├── sql_examples/                          ← SQL実装例
-│   ├── beginner_01_sql_digest.sql        # Step A：SQL基礎ダイジェスト（初心者）
-│   ├── beginner_02_cte_essence.sql       # Step B：CTE体験（初心者）
-│   ├── beginner_03_view_essence.sql      # Step C：VIEW体験（初心者）
-│   ├── beginner_04_sp_essence.sql        # Step D：SP体験（初心者）
-│   ├── beginner_05_task_essence.sql      # Step E：Task体験（初心者）
-│   ├── 01_select_where_distinct.sql      # SELECT, WHERE, DISTINCT 詳細（中級者）
-│   ├── 02_join.sql                       # JOIN 詳細（中級者）
-│   ├── 03_group_by.sql                   # GROUP BY, 集計関数 詳細（中級者）
-│   ├── 04_cte.sql                        # CTE 詳細（中級者）
-│   ├── 05_views.sql                      # VIEW, DYNAMIC TABLE 詳細（中級者）
-│   ├── 06_stored_procedure.sql           # ストアドプロシジャ 詳細（中級者）
-│   └── 07_task.sql                       # Snowflakeタスク 詳細（中級者）
-└── dbt_project/                           ← dbtプロジェクト
-    ├── dbt_project.yml                   # dbtプロジェクト設定
-    ├── create_dbt_project.sql            # dbt on Snowflake作成コマンド
-    ├── execute_dbt_project.sql           # dbt実行コマンド集
+│   ├── create_tables.sql
+│   ├── generate_data.py
+│   └── load_data.sql
+├── sql_examples/                          ← SQL実装例（初心者コース）
+│   ├── beginner_01_sql_digest.sql
+│   ├── beginner_02_cte_essence.sql
+│   ├── beginner_03_view_essence.sql
+│   ├── beginner_04_sp_essence.sql
+│   └── beginner_05_task_essence.sql
+└── dbt_project/                           ← dbtプロジェクト（初心者コース）
+    ├── dbt_project.yml
+    ├── create_dbt_project.sql
+    ├── execute_dbt_project.sql
     ├── models/
-    │   ├── staging/                      # Staging層
-    │   │   ├── stg_events_beginner.sql  # イベント前処理（初心者用・マクロ不使用）
-    │   │   ├── stg_users_beginner.sql   # ユーザー前処理（初心者用・マクロ不使用）
-    │   │   ├── stg_events.sql           # イベント前処理（中級者用・マクロ使用）
-    │   │   └── stg_users.sql            # ユーザー前処理（中級者用・マクロ使用）
-    │   ├── intermediate/                 # Intermediate層（中級者用）
-    │   │   └── int_daily_events.sql     # 日別イベント集計
-    │   └── marts/                        # Marts層
-    │       ├── daily_summary_beginner.sql # 日別サマリー（初心者用・staging直接集計）
-    │       ├── daily_summary.sql        # 日別サマリー（中級者用）
-    │       └── weekly_summary.sql       # 週別サマリー（中級者用）
-    ├── macros/                           # dbt Macros（中級者用）
-    │   └── common_logic.sql              # 再利用可能なマクロ定義
-    ├── tests/                            # dbtテスト定義
-    │   ├── schema_beginner.yml          # テスト定義（初心者用：unique/not_nullのみ）
-    │   └── schema.yml                    # テスト定義（中級者用：高度テスト含む）
-    └── README.md                         # dbtプロジェクト詳細
-
+    │   ├── staging/
+    │   │   ├── stg_events_beginner.sql
+    │   │   └── stg_users_beginner.sql
+    │   └── marts/
+    │       └── daily_summary_beginner.sql
+    ├── tests/
+    │   └── schema_beginner.yml
+    ├── profiles.yml
+    └── packages.yml
 ```
 
 ---
@@ -121,7 +80,7 @@ Snowflakeを使用したデータ分析の基礎から応用まで、実務で�
 - **Git** - バージョン管理用
 - **SnowSQL** または **Snowflake Web UI** - SQL実行用
 
-### データセット準備（両コース共通）
+### データセット準備
 
 #### 1. テーブル作成
 
@@ -191,49 +150,6 @@ SQLファイルを順番に実行し、「SQLの5つの壁」を体験：
 - `ref()` でモデル分割・依存管理が自動化
 - `dbt test` 1コマンドでデータ品質チェック自動化
 - Lineageグラフで依存関係が一目でわかる
-
----
-
-### 中級者コースの進め方
-
-#### 1コマ目：SQL詳細マスター（45分）
-
-SQLファイルを順番に実行：
-
-1. `sql_examples/01〜03` から応用パターン - FULL OUTER JOIN, Window関数, HAVING応用（10分）
-2. `sql_examples/04_cte.sql` - CTEマスター（RECURSIVE, ファネル分析）（10分）
-3. `sql_examples/05_views.sql` - VIEW + DYNAMIC TABLE 設計（8分）
-4. `sql_examples/06_stored_procedure.sql` + `07_task.sql` - SP+Taskパイプライン構築（12分）
-
-#### 2コマ目：dbt実践（45分）
-
-1. **Intermediate層の意義**（10分）
-   ```bash
-   dbt run -s staging intermediate
-   ```
-
-2. **Macros（DRY原則）**（10分）
-   - `macros/common_logic.sql` を確認
-   - マクロが `stg_events.sql` でどう使われているか確認
-
-3. **Weekly Summary + Window関数**（10分）
-   ```bash
-   dbt run -s weekly_summary
-   ```
-
-4. **高度テスト + ドキュメント生成**（10分）
-   ```bash
-   dbt test
-   dbt docs generate
-   ```
-
-5. **SP+Task → dbt置き換え比較**（5分）
-
-**中級者向け dbtの"良さ"の見せ方：**
-- 1コマ目のSP + Task の複雑さ vs `dbt run` の簡潔さ
-- Macrosでコピペ撲滅（DRY原則）
-- 高度テストでビジネスロジック品質保証
-- VIEW手動管理 vs dbtモデル自動管理（Lineage可視化）
 
 ---
 
@@ -317,12 +233,9 @@ pip install pandas faker
 
 ## よくある質問
 
-### Q：初心者コースと中級者コース、どちらから始めるべき？
+### Q：このリポジトリの対象者は？
 
-**A**：SQLの経験で判断してください：
-- **SQL未経験** → 初心者コースから
-- **SELECT, JOIN, GROUP BYがわかる** → 中級者コースから
-- **不安な場合** → 初心者コースから始めて、中級者コースに進むのがおすすめ
+**A**：SQL未経験〜初心者の方が対象です。中級者コースは別リポジトリで提供しています。
 
 ### Q：SQLだけでは不十分ですか？
 
@@ -338,7 +251,7 @@ pip install pandas faker
 
 ### Q：どのくらいの時間で習得できる？
 
-**A**：各コース90分で基礎習得。両コース受講しても3時間です。実務レベルには3ヶ月程度の練習が必要です。
+**A**：初心者コースは90分で基礎習得。実務レベルには3ヶ月程度の練習が必要です。
 
 ---
 
@@ -386,12 +299,6 @@ pip install pandas faker
 - **SQL基礎＋応用エッセンス** - SELECT, JOIN, GROUP BY + CTE/VIEW/SP/Taskのエッセンス
 - **「SQLの5つの壁」** - SQLだけでは解決しにくい管理・自動化の課題の認識
 - **dbt入門** - モデル分割、ref()、テスト、Lineageでの壁の突破
-
-### 中級者コースで習得できること
-
-- **SQL詳細マスター** - 01〜07の応用パターンを詳細に学ぶ
-- **dbt実践** - Intermediate層、Macros、高度テスト
-- **パイプライン比較** - SP+Task vs dbt の違いを体感
 
 **次のステップ**：
 1. このハンズオンで習得した知識を実務で応用

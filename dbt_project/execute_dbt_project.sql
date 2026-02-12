@@ -1,6 +1,6 @@
 /*
 ================================================================================
-dbt on Snowflake - プロジェクト実行コマンド集
+dbt on Snowflake - プロジェクト実行コマンド集（初心者コース用）
 ================================================================================
 
 【説明】
@@ -123,23 +123,15 @@ dbt run
 【説明】
   dbt_project.yml で定義されたすべてのモデルを順序付けで実行
   - staging/ モデル → DIESELPJ_TEST.DBT_HANDSON_STAGING に VIEW として作成
-  - intermediate/ モデル → DIESELPJ_TEST.DBT_HANDSON_INTERMEDIATE に VIEW として作成
   - marts/ モデル → DIESELPJ_TEST.DBT_HANDSON_MARTS に TABLE として作成
 
-【実行順序（全モデル実行時）】
+【実行順序】
   1. staging レイヤー
-     stg_events (VIEW)
-     stg_users (VIEW)
-     stg_events_v2 (VIEW)
-     stg_users_v2 (VIEW)
+     stg_events_beginner (VIEW)
+     stg_users_beginner (VIEW)
 
-  2. intermediate レイヤー
-     int_daily_events (VIEW)
-
-  3. marts レイヤー
-     daily_summary (TABLE)
-     daily_summary_v2 (TABLE)
-     weekly_summary (TABLE)
+  2. marts レイヤー
+     daily_summary_beginner (TABLE)
 
 【推奨】
   初回実行時は --full-refresh で全モデルを再構築
@@ -153,22 +145,18 @@ dbt run
 
 /*
 【特定モデルのみ実行】
-dbt run -s stg_events_v2
-
-【ビギナーコース（v2）のみ実行】
-dbt run --select tag:beginner
+dbt run -s stg_events_beginner
 
 【レイヤー指定実行】
-  dbt run -s staging           # staging レイヤーのみ
-  dbt run -s daily_summary_v2  # daily_summary_v2 のみ
-  dbt run -s +daily_summary_v2 # daily_summary_v2 と上流依存
+  dbt run -s staging                 # staging レイヤーのみ
+  dbt run -s daily_summary_beginner  # daily_summary_beginner のみ
+  dbt run -s +daily_summary_beginner # daily_summary_beginner と上流依存
 
 【演算子】
-  stg_events_v2        ← 単一モデル
-  tag:beginner         ← タグでセレクト
-  +daily_summary_v2    ← upstream + 指定モデル
-  daily_summary_v2+    ← 指定モデル + downstream
-  +daily_summary_v2+   ← upstream + 指定 + downstream
+  stg_events_beginner        ← 単一モデル
+  +daily_summary_beginner    ← upstream + 指定モデル
+  daily_summary_beginner+    ← 指定モデル + downstream
+  +daily_summary_beginner+   ← upstream + 指定 + downstream
 */
 
 
@@ -200,24 +188,16 @@ dbt run --full-refresh
 【すべてのテスト実行】
 dbt test
 
-【ビギナーコース（v2）のみテスト】
-dbt test --select tag:beginner
-
 【テスト内容（本プロジェクト）】
-  1. ソースデータテスト
-     - RAW_EVENTS, USERS の主キー一意性
-     - 必須フィールドの NULL チェック
-     - イベント種別の値チェック
+  1. ステージングモデルテスト
+     - stg_events_beginner の EVENT_ID 一意性
+     - stg_users_beginner の USER_ID 一意性
 
-  2. ステージングモデルテスト
-     - stg_events_v2 の EVENT_ID 一意性
-     - stg_users_v2 の USER_ID 一意性
-
-  3. マートモデルテスト
-     - daily_summary_v2 の NOT NULL チェック
+  2. マートモデルテスト
+     - daily_summary_beginner の NOT NULL チェック
 
 【個別テスト実行】
-dbt test -s stg_events_v2  # stg_events_v2 関連のテストのみ
+dbt test -s stg_events_beginner  # stg_events_beginner 関連のテストのみ
 */
 
 
@@ -244,7 +224,7 @@ dbt docs generate
      - プロジェクト名、バージョン
 
   2. Models
-     - stg_events_v2, stg_users_v2, daily_summary_v2 等
+     - stg_events_beginner, stg_users_beginner, daily_summary_beginner 等
      - 各モデルのカラム説明
      - テスト定義
 
@@ -266,9 +246,6 @@ dbt build
 
 【説明】
   モデル実行 → テスト実行 をまとめて実行
-
-【ビギナーコースのみビルド】
-  dbt build --select tag:beginner
 
 【オプション】
   dbt build --select staging  # staging レイヤーのビルド
@@ -304,11 +281,11 @@ dbt build
 -- 実行結果の確認クエリ（モデル実行後に使用）
 
 -- staging VIEW の確認
-SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_STAGING.STG_EVENTS_V2 LIMIT 10;
-SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_STAGING.STG_USERS_V2 LIMIT 10;
+SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_STAGING.STG_EVENTS_BEGINNER LIMIT 10;
+SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_STAGING.STG_USERS_BEGINNER LIMIT 10;
 
 -- marts TABLE の確認
-SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_MARTS.DAILY_SUMMARY_V2 LIMIT 10;
+SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_MARTS.DAILY_SUMMARY_BEGINNER LIMIT 10;
 
 
 -- =====================================================================
@@ -369,7 +346,7 @@ LIMIT 10;
 */
 
 
-SELECT '✓ dbt on Snowflake コマンド実行準備完了' AS MESSAGE;
+SELECT '✓ dbt on Snowflake コマンド実行準備完了（初心者コース用）' AS MESSAGE;
 -- 次のステップ：
 --   1. Snowflake Web UI → Projects
 --   2. Terminal で dbt deps を実行

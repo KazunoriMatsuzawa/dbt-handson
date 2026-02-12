@@ -1,6 +1,6 @@
 /*
 ================================================================================
-dbt on Snowflake - 実環境セットアップ
+dbt on Snowflake - 実環境セットアップ（初心者コース用）
 ================================================================================
 
 【説明】
@@ -41,21 +41,16 @@ SHOW TABLES IN DIESELPJ_TEST.DBT_HANDSON;
 -- =====================================================================
 --
 -- ソースデータ（DBT_HANDSON）と dbt の出力を分離します。
--- dbt のレイヤー構造に対応した3つのスキーマを作成します。
+-- dbt のレイヤー構造に対応した2つのスキーマを作成します。
 --
 -- 構成図：
 --   DBT_HANDSON          → ソースデータ（RAW_EVENTS, USERS 等）
 --   DBT_HANDSON_STAGING  → staging層（VIEW） - ソースの標準化
---   DBT_HANDSON_INTERMEDIATE → intermediate層（VIEW） - 結合・加工
 --   DBT_HANDSON_MARTS    → marts層（TABLE） - ビジネス向け最終データ
 
 -- staging層：生データの標準化（VIEW として作成される）
 CREATE SCHEMA IF NOT EXISTS DIESELPJ_TEST.DBT_HANDSON_STAGING
 COMMENT = 'dbt staging層 - ソースデータの標準化（VIEW）';
-
--- intermediate層：中間加工（VIEW として作成される）
-CREATE SCHEMA IF NOT EXISTS DIESELPJ_TEST.DBT_HANDSON_INTERMEDIATE
-COMMENT = 'dbt intermediate層 - 複数テーブルの結合・加工（VIEW）';
 
 -- marts層：最終ビジネスデータ（TABLE として作成される）
 CREATE SCHEMA IF NOT EXISTS DIESELPJ_TEST.DBT_HANDSON_MARTS
@@ -87,7 +82,6 @@ SHOW SCHEMAS LIKE 'DBT_HANDSON%' IN DATABASE DIESELPJ_TEST;
 【dbt が使用するスキーマの対応】
   dbt_project.yml の設定により、以下のスキーマにオブジェクトが作成されます：
   - staging モデル  → DIESELPJ_TEST.DBT_HANDSON_STAGING
-  - intermediate モデル → DIESELPJ_TEST.DBT_HANDSON_INTERMEDIATE
   - marts モデル    → DIESELPJ_TEST.DBT_HANDSON_MARTS
 
   ※ dbt のデフォルト動作：<target_schema>_<custom_schema> の形式で
@@ -108,8 +102,6 @@ SELECT 'Source Schema', 'DBT_HANDSON'
 UNION ALL
 SELECT 'Staging Schema', 'DBT_HANDSON_STAGING'
 UNION ALL
-SELECT 'Intermediate Schema', 'DBT_HANDSON_INTERMEDIATE'
-UNION ALL
 SELECT 'Marts Schema', 'DBT_HANDSON_MARTS';
 
 
@@ -128,19 +120,14 @@ SELECT 'Marts Schema', 'DBT_HANDSON_MARTS';
   4. dbt test          # テストの実行
   5. dbt docs generate # ドキュメント生成
 
-【ビギナーコース（v2）のみ実行する場合】
-
-  dbt run --select tag:beginner     # beginnerタグのモデルのみ実行
-  dbt test --select tag:beginner    # beginnerタグのテストのみ実行
-
 【確認】
 
   -- staging VIEWの確認
-  SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_STAGING.STG_EVENTS_V2 LIMIT 10;
-  SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_STAGING.STG_USERS_V2 LIMIT 10;
+  SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_STAGING.STG_EVENTS_BEGINNER LIMIT 10;
+  SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_STAGING.STG_USERS_BEGINNER LIMIT 10;
 
   -- marts TABLEの確認
-  SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_MARTS.DAILY_SUMMARY_V2 LIMIT 10;
+  SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_MARTS.DAILY_SUMMARY_BEGINNER LIMIT 10;
 */
 
 
@@ -175,7 +162,7 @@ SELECT 'Marts Schema', 'DBT_HANDSON_MARTS';
 */
 
 
-SELECT '✓ dbt on Snowflake セットアップ完了' AS MESSAGE;
+SELECT '✓ dbt on Snowflake セットアップ完了（初心者コース用）' AS MESSAGE;
 -- 次のステップ：
 --   1. Snowflake UI で DBT PROJECT を作成
 --   2. dbt deps でパッケージをインストール

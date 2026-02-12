@@ -4,58 +4,43 @@ Marts Model: daily_summary_beginner（初心者コース用）
 ================================================================================
 
 【目的】
-  初心者向けの日別サマリーテーブルです。
-  intermediate層をスキップし、stagingから直接集計します。
-  シンプルなKPIのみ（event_count, unique_users, purchase_count）。
+  日別・国別のイベントサマリーを作成します。
+  1コマ目 Step A で学んだ JOIN + GROUP BY + CASE をそのまま使用。
+
+【1コマ目との対応】
+  Step A: INNER JOIN, GROUP BY, COUNT, CASE → そのまま使用
+  Step D: SPの DELETE + INSERT → {{ config(materialized='table') }} に置き換え
+  Step E: Task の AFTER句 → {{ ref() }} に置き換え
 
 【特性】
   - Materialization: TABLE
-  - intermediate層をスキップ（初心者にわかりやすい構成）
-  - ref() で staging モデルを参照（依存管理を体験）
-
-【出力】
-  DAILY_SUMMARY_BEGINNER テーブル
+  - ref() で staging モデルへの依存を自動管理
+  - marts = ビジネスの答えを出す層（staging を組み合わせる）
 */
 
 {{ config(
     materialized='table',
-    tags=['marts', 'beginner'],
-    description='日別サマリー（初心者コース用・stagingから直接集計）'
+    tags=['marts', 'beginner']
 ) }}
 
-WITH events AS (
-    -- staging モデルからイベントデータを取得
-    SELECT * FROM {{ ref('stg_events_beginner') }}
-),
-
-users AS (
-    -- staging モデルからユーザーデータを取得
-    SELECT * FROM {{ ref('stg_users_beginner') }}
-),
-
-joined AS (
-    -- イベントとユーザーを結合（SQL Session 1 の JOIN を dbt で体験）
+-- CTE：stagingモデルを結合（1コマ目では5段CTEだったが、ファイル分割で1段に）
+WITH joined AS (
     SELECT
-        e.EVENT_DATE,
-        u.COUNTRY,
-        e.EVENT_ID,
-        e.USER_ID,
-        e.EVENT_TYPE
-    FROM events e
-    INNER JOIN users u
-        ON e.USER_ID = u.USER_ID
-),
-
-daily_aggregated AS (
-    -- 日別・国別に集計（SQL Session 1 の GROUP BY を dbt で体験）
-    SELECT
-        EVENT_DATE,
-        COUNTRY,
-        COUNT(*) AS EVENT_COUNT,
-        COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
-        COUNT(DISTINCT CASE WHEN EVENT_TYPE = 'PURCHASE' THEN EVENT_ID END) AS PURCHASE_COUNT
-    FROM joined
-    GROUP BY EVENT_DATE, COUNTRY
+        E.EVENT_DATE,
+        U.COUNTRY,
+        E.EVENT_ID,
+        E.USER_ID,
+        E.EVENT_TYPE
+    FROM {{ ref('stg_events_beginner') }} E
+    INNER JOIN {{ ref('stg_users_beginner') }} U
+        ON E.USER_ID = U.USER_ID
 )
 
-SELECT * FROM daily_aggregated
+SELECT
+    EVENT_DATE,
+    COUNTRY,
+    COUNT(*) AS EVENT_COUNT,
+    COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,
+    COUNT(CASE WHEN EVENT_TYPE = 'purchase' THEN 1 END) AS PURCHASE_COUNT
+FROM joined
+GROUP BY EVENT_DATE, COUNTRY
