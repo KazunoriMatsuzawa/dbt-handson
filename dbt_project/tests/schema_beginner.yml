@@ -1,0 +1,79 @@
+version: 2
+
+# =====================================================================
+# 初心者コース用：ソース定義
+# =====================================================================
+# 注：ソース定義は schema.yml と共有されます。
+#     初心者コースでは、このファイルのモデルテスト定義のみを使用します。
+#     ソース定義は既存の schema.yml を参照してください。
+
+
+# =====================================================================
+# 初心者コース用：モデル定義とテスト
+# =====================================================================
+# テストは unique と not_null のみ（dbt_utils の高度テストは含めない）
+
+models:
+  # ----- Staging Layer（初心者用） -----
+  - name: stg_events_beginner
+    description: "前処理済みイベントログ（初心者コース用・マクロ不使用）"
+    columns:
+      - name: EVENT_ID
+        description: "イベントID（主キー）"
+        tests:
+          - unique
+          - not_null
+      - name: USER_ID
+        description: "ユーザーID"
+        tests:
+          - not_null
+      - name: EVENT_TYPE
+        description: "イベント種別（大文字）"
+        tests:
+          - not_null
+      - name: EVENT_DATE
+        description: "イベント発生日"
+        tests:
+          - not_null
+
+  - name: stg_users_beginner
+    description: "前処理済みユーザーマスタ（初心者コース用・マクロ不使用）"
+    columns:
+      - name: USER_ID
+        description: "ユーザーID（主キー）"
+        tests:
+          - unique
+          - not_null
+      - name: COUNTRY
+        description: "国コード"
+        tests:
+          - not_null
+      - name: PLAN_TYPE
+        description: "プランタイプ（free / premium）"
+        tests:
+          - not_null
+
+  # ----- Marts Layer（初心者用） -----
+  - name: daily_summary_beginner
+    description: "日別サマリー（初心者コース用・stagingから直接集計）"
+    columns:
+      - name: EVENT_DATE
+        description: "イベント発生日"
+        tests:
+          - not_null
+      - name: COUNTRY
+        description: "国コード"
+        tests:
+          - not_null
+      - name: EVENT_COUNT
+        description: "イベント件数"
+        tests:
+          - not_null
+      - name: UNIQUE_USERS
+        description: "ユニークユーザー数"
+        tests:
+          - not_null
+      - name: PURCHASE_COUNT
+        description: "購入イベント件数"
+        tests:
+          - not_null

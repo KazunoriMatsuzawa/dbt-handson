@@ -1,0 +1,54 @@
+version: 2
+
+# =====================================================================
+# 強化版Approach B：モデル定義とテスト（初心者コース用）
+# =====================================================================
+# 1コマ目 Step C で「手動SELECTでNULLチェック」していた作業を
+# schema.yml + dbt test で自動化する体験用。
+#
+# テストは unique と not_null のみ（シンプルに保つ）
+
+models:
+  # ----- Staging Layer -----
+  - name: stg_events_v2
+    description: "前処理済みイベントログ（強化版Approach B・最小限クリーニング）"
+    columns:
+      - name: EVENT_ID
+        description: "イベントID（主キー）"
+        tests:
+          - unique
+          - not_null
+      - name: USER_ID
+        description: "ユーザーID"
+        tests:
+          - not_null
+      - name: EVENT_DATE
+        description: "イベント発生日"
+        tests:
+          - not_null
+
+  - name: stg_users_v2
+    description: "前処理済みユーザーマスタ（強化版Approach B・最小限クリーニング）"
+    columns:
+      - name: USER_ID
+        description: "ユーザーID（主キー）"
+        tests:
+          - unique
+          - not_null
+
+  # ----- Marts Layer -----
+  - name: daily_summary_v2
+    description: "日別サマリー（強化版Approach B・stagingからJOIN+GROUP BY）"
+    columns:
+      - name: EVENT_DATE
+        description: "イベント発生日"
+        tests:
+          - not_null
+      - name: COUNTRY
+        description: "国コード"
+        tests:
+          - not_null
+      - name: EVENT_COUNT
+        description: "イベント件数"
+        tests:
+          - not_null
