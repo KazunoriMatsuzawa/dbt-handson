@@ -10,7 +10,7 @@ dbt on Snowflake - プロジェクト実行コマンド集
 【実行環境】
   - データベース: DIESELPJ_TEST
   - ウェアハウス: COMPUTE_WH
-  - ロール: SANDSHREW_ADMIN
+  - ロール: SANDSHREW_PUBLIC
   - Snowflake Web UI の Projects セクション
 
 【最初に実行すべきコマンド順序】
@@ -326,7 +326,7 @@ SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_MARTS.DAILY_SUMMARY_V2 LIMIT 10;
 
 【エラー：Insufficient privileges】
   原因：Snowflake ユーザーの権限不足
-  解決：SANDSHREW_ADMIN ロールで実行しているか確認
+  解決：SANDSHREW_PUBLIC ロールで実行しているか確認
 
 【エラー：Warehouse suspended】
   原因：ウェアハウスが一時停止している

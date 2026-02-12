@@ -11,10 +11,10 @@ dbt on Snowflake - 実環境セットアップ
   - データベース: DIESELPJ_TEST（既存）
   - ウェアハウス: COMPUTE_WH（既存）
   - スキーマ: DBT_HANDSON（既存 - ソースデータ格納済み）
-  - ロール: SANDSHREW_ADMIN（既存）
+  - ロール: SANDSHREW_PUBLIC（既存）
 
 【実行方法】
-  SANDSHREW_ADMIN ロールで Snowflake Web UI から実行してください。
+  SANDSHREW_PUBLIC ロールで Snowflake Web UI から実行してください。
 */
 
 
@@ -159,8 +159,8 @@ SELECT 'Marts Schema', 'DBT_HANDSON_MARTS';
    → SHOW TABLES IN DIESELPJ_TEST.DBT_HANDSON;
 
 3. "Insufficient privileges"
-   → SANDSHREW_ADMIN ロールで実行しているか確認
-   → USE ROLE SANDSHREW_ADMIN;
+   → SANDSHREW_PUBLIC ロールで実行しているか確認
+   → USE ROLE SANDSHREW_PUBLIC;
 
 4. "Warehouse does not exist"
    → COMPUTE_WH が存在するか確認

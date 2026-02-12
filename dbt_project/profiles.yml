@@ -1,0 +1,22 @@
+# profiles.yml - dbt on Snowflake 接続プロファイル定義
+#
+# このファイルは dbt_project.yml の profile: 'snowflake' に対応する
+# 接続設定を定義します。
+#
+# dbt Projects on Snowflake では、以下のフィールドが必須です:
+#   - database: 使用するデータベース名
+#   - role: 実行ロール
+#   - schema: デフォルトのターゲットスキーマ
+#   - type: snowflake (固定)
+#
+# 参考: https://docs.snowflake.com/ja/user-guide/data-engineering/dbt-projects-on-snowflake-deploy
+
+snowflake:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      database: DIESELPJ_TEST
+      role: SANDSHREW_PUBLIC
+      schema: DBT_HANDSON
+      warehouse: COMPUTE_WH
