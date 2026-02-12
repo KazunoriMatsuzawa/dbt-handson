@@ -37,8 +37,8 @@ models:
     # Materialization：VIEW（軽量、最新データ）
     staging:
       +materialized: view
+      +schema: staging
       +tags: ["staging"]
-      # テスト定義は tests/schema.yml に集約しています
 
     # =====================================
     # INTERMEDIATE レイヤー
@@ -47,6 +47,7 @@ models:
     # Materialization：VIEW（軽量）
     intermediate:
       +materialized: view
+      +schema: intermediate
       +tags: ["intermediate"]
 
     # =====================================

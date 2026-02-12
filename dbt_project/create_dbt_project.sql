@@ -1,290 +1,146 @@
 /*
 ================================================================================
-dbt on Snowflake - プロジェクト作成コマンド
+dbt on Snowflake - 実環境セットアップ
 ================================================================================
 
 【説明】
-  このスクリプトは、Snowflake内にdbt on Snowflakeのプロジェクトオブジェクトを
-  作成するためのコマンド例を含みます。
-
-【実行環境】
-  - Snowflake エンタープライズ版以上
-  - dbt on Snowflake が有効化されていること
-  - 管理者権限が必要
+  既存のSnowflake環境にdbt用のスキーマを作成するスクリプトです。
+  ウェアハウス、データベース、権限は既存のものを使用します。
 
 【前提条件】
-  1. このリポジトリが Git に接続されていること
-  2. GitHub/GitLab等の Git プロバイダーが設定されていること
-  3. 必要なウェアハウスが作成されていること
+  - データベース: DIESELPJ_TEST（既存）
+  - ウェアハウス: COMPUTE_WH（既存）
+  - スキーマ: DBT_HANDSON（既存 - ソースデータ格納済み）
+  - ロール: SANDSHREW_ADMIN（既存）
+
+【実行方法】
+  SANDSHREW_ADMIN ロールで Snowflake Web UI から実行してください。
 */
 
+
 -- =====================================================================
--- ステップ1：dbtプロジェクト用ウェアハウスの確認・作成
+-- ステップ1：既存環境の確認
 -- =====================================================================
 
--- dbt実行用ウェアハウスを作成
-CREATE OR REPLACE WAREHOUSE DBT_WH
-WITH
-    WAREHOUSE_SIZE = 'SMALL'
-    AUTO_SUSPEND = 60
-    AUTO_RESUME = TRUE
-    SCALING_POLICY = 'STANDARD';
+USE ROLE SANDSHREW_ADMIN;
+USE WAREHOUSE COMPUTE_WH;
+USE DATABASE DIESELPJ_TEST;
 
 -- ウェアハウスの確認
-SHOW WAREHOUSES LIKE 'DBT_WH';
+SHOW WAREHOUSES LIKE 'COMPUTE_WH';
+
+-- 既存スキーマの確認（ソースデータ）
+SHOW SCHEMAS LIKE 'DBT_HANDSON' IN DATABASE DIESELPJ_TEST;
+
+-- ソーステーブルの確認（RAW_EVENTS, USERS, SESSIONS）
+SHOW TABLES IN DIESELPJ_TEST.DBT_HANDSON;
 
 
 -- =====================================================================
--- ステップ2：dbt実行用データベース・スキーマの準備
+-- ステップ2：dbt出力用スキーマの作成
 -- =====================================================================
+--
+-- ソースデータ（DBT_HANDSON）と dbt の出力を分離します。
+-- dbt のレイヤー構造に対応した3つのスキーマを作成します。
+--
+-- 構成図：
+--   DBT_HANDSON          → ソースデータ（RAW_EVENTS, USERS 等）
+--   DBT_HANDSON_STAGING  → staging層（VIEW） - ソースの標準化
+--   DBT_HANDSON_INTERMEDIATE → intermediate層（VIEW） - 結合・加工
+--   DBT_HANDSON_MARTS    → marts層（TABLE） - ビジネス向け最終データ
 
--- データベース確認・作成
-CREATE OR REPLACE DATABASE ANALYTICS;
+-- staging層：生データの標準化（VIEW として作成される）
+CREATE SCHEMA IF NOT EXISTS DIESELPJ_TEST.DBT_HANDSON_STAGING
+COMMENT = 'dbt staging層 - ソースデータの標準化（VIEW）';
 
--- スキーマ作成（層別）
-CREATE OR REPLACE SCHEMA ANALYTICS.STAGING;
-CREATE OR REPLACE SCHEMA ANALYTICS.INTERMEDIATE;
-CREATE OR REPLACE SCHEMA ANALYTICS.MARTS;
+-- intermediate層：中間加工（VIEW として作成される）
+CREATE SCHEMA IF NOT EXISTS DIESELPJ_TEST.DBT_HANDSON_INTERMEDIATE
+COMMENT = 'dbt intermediate層 - 複数テーブルの結合・加工（VIEW）';
 
--- スキーマ権限設定
-GRANT USAGE ON DATABASE ANALYTICS TO ROLE TRANSFORMER;
-GRANT USAGE ON SCHEMA ANALYTICS.STAGING TO ROLE TRANSFORMER;
-GRANT USAGE ON SCHEMA ANALYTICS.INTERMEDIATE TO ROLE TRANSFORMER;
-GRANT USAGE ON SCHEMA ANALYTICS.MARTS TO ROLE TRANSFORMER;
-GRANT CREATE TABLE ON SCHEMA ANALYTICS.STAGING TO ROLE TRANSFORMER;
-GRANT CREATE TABLE ON SCHEMA ANALYTICS.INTERMEDIATE TO ROLE TRANSFORMER;
-GRANT CREATE TABLE ON SCHEMA ANALYTICS.MARTS TO ROLE TRANSFORMER;
+-- marts層：最終ビジネスデータ（TABLE として作成される）
+CREATE SCHEMA IF NOT EXISTS DIESELPJ_TEST.DBT_HANDSON_MARTS
+COMMENT = 'dbt marts層 - ビジネス向け最終データマート（TABLE）';
 
-
--- =====================================================================
--- ステップ3：DBT PROJECT オブジェクト作成（Snowflake Native）
--- =====================================================================
-
-/*
-【注意】
-  このコマンドは Snowflake UI で実行してください
-  コマンドラインの SnowSQL では実行できない可能性があります
-
-【実行場所】
-  Snowflake Web UI → Projects → Create DBT Project
-*/
-
--- 例：Git from GitHub の場合のコマンド構成
--- （実際の実行は Snowflake UI から）
-
-/*
-CREATE DBT PROJECT IF NOT EXISTS my_analytics_project
-  AUTO_EXECUTE = FALSE
-  EXECUTE_ON_PUSH = 'main'
-  GIT_REPOSITORY = 'https://github.com/your-org/your-repo.git'
-  API_INTEGRATION = 'github_api'
-  REPOSITORY_PATH = '/dbt_project'
-  DEFAULT_COMPUTE_POOL = 'compute_pool_default'
-  DEFAULT_PACKAGE_PATH = 'build'
-;
-*/
+-- 作成確認
+SHOW SCHEMAS LIKE 'DBT_HANDSON%' IN DATABASE DIESELPJ_TEST;
 
 
 -- =====================================================================
--- ステップ4：Git 統合の設定（GitHub の例）
+-- ステップ3：dbt on Snowflake プロジェクト設定
 -- =====================================================================
 
 /*
-【前提】
-  GitHub の OAuth App が設定されていること
-  Snowflake で API Integration が作成されていること
+【Snowflake Web UI でのプロジェクト作成手順】
 
-【実行手順】
-  1. Snowflake Admin が GitHub API Integration を作成
-  2. GitHub の OAuth App の認証情報を設定
-  3. DBT PROJECT オブジェクトで GIT_REPOSITORY を指定
-*/
-
--- Git Repository 状態確認（DBT PROJECT 作成後）
--- (Snowflake UI から実行)
-
-
--- =====================================================================
--- ステップ5：dbt role と権限設定
--- =====================================================================
-
--- dbt 実行用ロールの作成
-CREATE OR REPLACE ROLE TRANSFORMER;
-
--- ウェアハウス権限
-GRANT USAGE ON WAREHOUSE DBT_WH TO ROLE TRANSFORMER;
-GRANT OPERATE ON WAREHOUSE DBT_WH TO ROLE TRANSFORMER;
-
--- データベース・スキーマ権限
-GRANT USAGE ON DATABASE ANALYTICS TO ROLE TRANSFORMER;
-GRANT USAGE ON SCHEMA ANALYTICS.PUBLIC TO ROLE TRANSFORMER;
-GRANT USAGE ON SCHEMA ANALYTICS.STAGING TO ROLE TRANSFORMER;
-GRANT USAGE ON SCHEMA ANALYTICS.INTERMEDIATE TO ROLE TRANSFORMER;
-GRANT USAGE ON SCHEMA ANALYTICS.MARTS TO ROLE TRANSFORMER;
-
--- テーブル作成権限
-GRANT CREATE TABLE ON SCHEMA ANALYTICS.STAGING TO ROLE TRANSFORMER;
-GRANT CREATE TABLE ON SCHEMA ANALYTICS.INTERMEDIATE TO ROLE TRANSFORMER;
-GRANT CREATE TABLE ON SCHEMA ANALYTICS.MARTS TO ROLE TRANSFORMER;
-
--- ビュー作成権限
-GRANT CREATE VIEW ON SCHEMA ANALYTICS.STAGING TO ROLE TRANSFORMER;
-GRANT CREATE VIEW ON SCHEMA ANALYTICS.INTERMEDIATE TO ROLE TRANSFORMER;
-
--- ユーザーにロールを付与
--- (適切なユーザー名に置き換え)
--- GRANT ROLE TRANSFORMER TO USER dbt_user;
-
-
--- =====================================================================
--- ステップ6：dbt メタデータスキーマの準備
--- =====================================================================
-
--- dbt メタデータ用スキーマ（オプション）
-CREATE OR REPLACE SCHEMA ANALYTICS.DBT_METADATA;
-
--- テスト結果テーブル
-CREATE OR REPLACE TABLE ANALYTICS.DBT_METADATA.DBT_TEST_RESULTS (
-    TEST_NAME VARCHAR,
-    MODEL_NAME VARCHAR,
-    TEST_STATUS VARCHAR,
-    TEST_TIMESTAMP TIMESTAMP,
-    ERROR_MESSAGE VARCHAR
-);
-
--- 実行履歴テーブル
-CREATE OR REPLACE TABLE ANALYTICS.DBT_METADATA.DBT_EXECUTION_LOG (
-    PROJECT_NAME VARCHAR,
-    EXECUTION_ID VARCHAR,
-    COMMAND VARCHAR,
-    START_TIME TIMESTAMP,
-    END_TIME TIMESTAMP,
-    STATUS VARCHAR,
-    ROWS_AFFECTED INTEGER
-);
-
-
--- =====================================================================
--- ステップ7：dbt on Snowflake 実行前の確認
--- =====================================================================
-
--- 全体構成の確認クエリ
-SELECT
-    'Database' AS RESOURCE_TYPE,
-    DATABASE_NAME AS RESOURCE_NAME,
-    'ANALYTICS' AS VALUE
-FROM INFORMATION_SCHEMA.DATABASES
-WHERE DATABASE_NAME = 'ANALYTICS'
-
-UNION ALL
-
-SELECT
-    'Warehouse' AS RESOURCE_TYPE,
-    WAREHOUSE_NAME AS RESOURCE_NAME,
-    'DBT_WH' AS VALUE
-FROM INFORMATION_SCHEMA.WAREHOUSES
-WHERE WAREHOUSE_NAME = 'DBT_WH'
-
-UNION ALL
-
-SELECT
-    'Role' AS RESOURCE_TYPE,
-    ROLE_NAME AS RESOURCE_NAME,
-    'TRANSFORMER' AS VALUE
-FROM INFORMATION_SCHEMA.APPLICABLE_ROLES
-WHERE ROLE_NAME = 'TRANSFORMER';
-
-
--- =====================================================================
--- ステップ8：Snowflake UI での DBT PROJECT 実行
--- =====================================================================
-
-/*
-【実行手順（Snowflake Web UI）】
-
-1. Projects メニューを開く
-2. "Create New Project" をクリック
+1. Snowflake Web UI にログイン
+2. Projects → "Create New Project" をクリック
 3. "Develop in Git" を選択
 4. Git リポジトリ URL を入力（このリポジトリ）
 5. 認証を設定
-6. Default Warehouse を DBT_WH に設定
+6. 以下のパラメータを設定：
+   - Database: DIESELPJ_TEST
+   - Schema: DBT_HANDSON（デフォルトスキーマ）
+   - Warehouse: COMPUTE_WH
+   - Repository Path: /dbt_project
 7. "Create" をクリック
 
-8. プロジェクト内で以下を実行：
-   - dbt deps（依存関係インストール）
-   - dbt debug（接続確認）
-   - dbt run（モデル実行）
-   - dbt test（テスト実行）
-   - dbt docs generate（ドキュメント生成）
+【dbt が使用するスキーマの対応】
+  dbt_project.yml の設定により、以下のスキーマにオブジェクトが作成されます：
+  - staging モデル  → DIESELPJ_TEST.DBT_HANDSON_STAGING
+  - intermediate モデル → DIESELPJ_TEST.DBT_HANDSON_INTERMEDIATE
+  - marts モデル    → DIESELPJ_TEST.DBT_HANDSON_MARTS
 
-【UI から実行するコマンド】
-  dbt deps
-  dbt run
-  dbt test
-  dbt docs generate
+  ※ dbt のデフォルト動作：<target_schema>_<custom_schema> の形式で
+    スキーマ名が生成されます。
 */
 
 
 -- =====================================================================
--- ステップ9：スケジュール実行用タスク作成（オプション）
+-- ステップ4：セットアップ完了後の確認
+-- =====================================================================
+
+-- 全体構成の確認クエリ
+SELECT 'Warehouse' AS RESOURCE_TYPE, 'COMPUTE_WH' AS RESOURCE_NAME
+UNION ALL
+SELECT 'Database', 'DIESELPJ_TEST'
+UNION ALL
+SELECT 'Source Schema', 'DBT_HANDSON'
+UNION ALL
+SELECT 'Staging Schema', 'DBT_HANDSON_STAGING'
+UNION ALL
+SELECT 'Intermediate Schema', 'DBT_HANDSON_INTERMEDIATE'
+UNION ALL
+SELECT 'Marts Schema', 'DBT_HANDSON_MARTS';
+
+
+-- =====================================================================
+-- ステップ5：dbt on Snowflake 初回実行
 -- =====================================================================
 
 /*
-【Snowflake Task との統合】
+【Snowflake Web UI での実行手順】
 
-DBT PROJECT の実行を Snowflake Task でスケジュール化：
+  Projects → [プロジェクト名] → Terminal で以下を順番に実行：
 
-CREATE OR REPLACE TASK ANALYTICS.RUN_DBT_DAILY
-WAREHOUSE = DBT_WH
-SCHEDULE = 'USING CRON 0 1 * * * UTC'
-AS
-EXECUTE DBT PROJECT ANALYTICS.MY_ANALYTICS_PROJECT
-COMMAND = 'dbt run'
-;
+  1. dbt deps          # 依存パッケージのインストール
+  2. dbt debug         # 接続確認
+  3. dbt run           # モデルの実行
+  4. dbt test          # テストの実行
+  5. dbt docs generate # ドキュメント生成
 
-ALTER TASK ANALYTICS.RUN_DBT_DAILY RESUME;
+【ビギナーコース（v2）のみ実行する場合】
 
-【テスト実行タスク】
+  dbt run --select tag:beginner     # beginnerタグのモデルのみ実行
+  dbt test --select tag:beginner    # beginnerタグのテストのみ実行
 
-CREATE OR REPLACE TASK ANALYTICS.RUN_DBT_TESTS
-WAREHOUSE = DBT_WH
-AFTER ANALYTICS.RUN_DBT_DAILY
-AS
-EXECUTE DBT PROJECT ANALYTICS.MY_ANALYTICS_PROJECT
-COMMAND = 'dbt test'
-;
+【確認】
 
-ALTER TASK ANALYTICS.RUN_DBT_TESTS RESUME;
-*/
+  -- staging VIEWの確認
+  SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_STAGING.STG_EVENTS_V2 LIMIT 10;
+  SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_STAGING.STG_USERS_V2 LIMIT 10;
 
-
--- =====================================================================
--- ステップ10：Snowflake UI でのプロジェクト確認
--- =====================================================================
-
-/*
-【dbt on Snowflake UIで確認できる内容】
-
-1. Project Dashboard
-   - 最新の実行状況
-   - 実行時間、成功/失敗数
-
-2. DAG (Directed Acyclic Graph)
-   - モデル間の依存関係を可視化
-
-3. Lineage (系統図)
-   - データの流れを可視化
-
-4. Documentation
-   - モデルのスキーマ情報
-   - テストの定義
-
-5. Execution History
-   - 過去の実行履歴
-   - エラーログ
-
-【アクセス】
-  Snowflake Web UI → Projects → 対象プロジェクト
+  -- marts TABLEの確認
+  SELECT * FROM DIESELPJ_TEST.DBT_HANDSON_MARTS.DAILY_SUMMARY_V2 LIMIT 10;
 */
 
 
@@ -295,30 +151,29 @@ ALTER TASK ANALYTICS.RUN_DBT_TESTS RESUME;
 /*
 【よくあるエラーと解決方法】
 
-1. "Database does not exist"
-   → ANALYTICS データベースが作成されていることを確認
+1. "Schema does not exist"
+   → ステップ2 のスキーマ作成を実行してください
 
-2. "Insufficient privileges"
-   → TRANSFORMER ロールに必要な権限があることを確認
+2. "Object does not exist: RAW_EVENTS"
+   → DBT_HANDSON スキーマにソーステーブルが存在するか確認
+   → SHOW TABLES IN DIESELPJ_TEST.DBT_HANDSON;
 
-3. "Warehouse does not exist"
-   → DBT_WH ウェアハウスが作成されていることを確認
+3. "Insufficient privileges"
+   → SANDSHREW_ADMIN ロールで実行しているか確認
+   → USE ROLE SANDSHREW_ADMIN;
 
-4. "Git authentication failed"
-   → GitHub API Integration の設定を確認
+4. "Warehouse does not exist"
+   → COMPUTE_WH が存在するか確認
+   → SHOW WAREHOUSES LIKE 'COMPUTE_WH';
 
 5. "Connection timeout"
    → ウェアハウスが一時停止している可能性
-   → ALTER WAREHOUSE DBT_WH RESUME; で再開
+   → ALTER WAREHOUSE COMPUTE_WH RESUME;
 
 【ログ確認】
   Snowflake UI → Admin → Query History で実行ログを確認
 */
 
-
--- =====================================================================
--- 最終確認
--- =====================================================================
 
 SELECT '✓ dbt on Snowflake セットアップ完了' AS MESSAGE;
 -- 次のステップ：

@@ -6,8 +6,8 @@ version: 2
 sources:
   - name: analytics
     description: "分析用の基本データソース"
-    database: ANALYTICS
-    schema: PUBLIC
+    database: DIESELPJ_TEST
+    schema: DBT_HANDSON
     tables:
       - name: RAW_EVENTS
         description: "生のイベントログデータ（Webアクセスログ）"

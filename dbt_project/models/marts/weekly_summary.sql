@@ -19,7 +19,7 @@ Fact Model: weekly_summary
   - トレンド分析向けメトリクス
 
 【出力】
-  ANALYTICS.MARTS.WEEKLY_SUMMARY
+  DIESELPJ_TEST.DBT_HANDSON_MARTS.WEEKLY_SUMMARY
 */
 
 {{ config(

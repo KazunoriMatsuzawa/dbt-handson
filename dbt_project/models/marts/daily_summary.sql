@@ -23,7 +23,7 @@ Fact Model: daily_summary
   Snowflake では CLUSTER BY で最適化
 
 【出力】
-  ANALYTICS.MARTS.DAILY_SUMMARY
+  DIESELPJ_TEST.DBT_HANDSON_MARTS.DAILY_SUMMARY
 */
 
 {{ config(
