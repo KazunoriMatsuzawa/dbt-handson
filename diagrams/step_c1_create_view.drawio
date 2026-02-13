@@ -1,0 +1,149 @@
+<mxfile host="65bd71144e">
+    <diagram id="c1-create-view" name="VIEW：クエリを仮想テーブルとして保存">
+        <mxGraphModel dx="414" dy="779" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="c1_title" value="&lt;b&gt;VIEW：クエリを仮想テーブルとして保存&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="20" width="360" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_raw_events" value="&lt;b&gt;RAW_EVENTS&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;EVENT_TIMESTAMP, USER_ID,&lt;br&gt;SESSION_ID, EVENT_TYPE&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;shadow=1;fontSize=12;fontColor=#333333;arcSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="200" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_groupby" value="&lt;b&gt;GROUP BY&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;DATE(EVENT_TIMESTAMP)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F7FA;strokeColor=#00ACC1;shadow=1;fontSize=12;fontColor=#333333;arcSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="200" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_arrow_re_gb" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#6c8ebf;strokeWidth=2;endArrow=blockThin;endFill=1;" parent="1" source="c1_raw_events" target="c1_groupby" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_view_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2F1;strokeColor=#26A69A;shadow=1;fontSize=12;fontColor=#333333;arcSize=6;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="140" width="280" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_view_icon" value="&lt;font style=&quot;font-size:10px;color:#26A69A&quot;&gt;VIEW&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#E0F2F1;strokeColor=#26A69A;fontSize=10;fontColor=#26A69A;" parent="1" vertex="1">
+                    <mxGeometry x="660" y="150" width="40" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_view_title" value="&lt;b style=&quot;font-size:14px&quot;&gt;V_DAILY_EVENTS&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;color:#555&quot;&gt;仮想テーブル（データは保持しない）&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=12;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="148" width="220" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_view_col1" value="EVENT_DATE" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="195" width="90" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_view_col2" value="EVENT_COUNT" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="217" width="100" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_view_col3" value="UNIQUE_USERS" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="239" width="110" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_view_col4" value="UNIQUE_SESSIONS" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="261" width="130" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_view_dt1" value="DATE" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#888888;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="195" width="50" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_view_dt2" value="NUMBER" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#888888;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="217" width="60" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_view_dt3" value="NUMBER" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#888888;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="239" width="60" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_view_dt4" value="NUMBER" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#888888;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="261" width="60" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_arrow_gb_view" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#00ACC1;strokeWidth=2;endArrow=blockThin;endFill=1;" parent="1" source="c1_groupby" target="c1_view_box" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_select_from" value="&lt;b&gt;SELECT * FROM V_DAILY_EVENTS&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;WHERE EVENT_DATE &amp;gt;= DATEADD(DAY, -7, CURRENT_DATE)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#FFB300;shadow=1;fontSize=11;fontColor=#333333;arcSize=12;dashed=1;dashPattern=8 4;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="400" width="280" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_arrow_view_select" value="&lt;font style=&quot;font-size:10px;color:#26A69A&quot;&gt;参照するたびに&lt;br&gt;クエリが再実行される&lt;/font&gt;" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#26A69A;strokeWidth=2;endArrow=blockThin;endFill=1;dashed=1;dashPattern=8 4;labelBackgroundColor=#FFFFFF;" parent="1" source="c1_view_box" target="c1_select_from" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_result_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;shadow=1;fontSize=12;fontColor=#333333;arcSize=6;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="200" width="250" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_result_title" value="&lt;b style=&quot;color:#E65100&quot;&gt;クエリ結果&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=13;fontColor=#E65100;" parent="1" vertex="1">
+                    <mxGeometry x="1120" y="205" width="90" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_res_r1" value="&lt;font style=&quot;font-size:11px&quot;&gt;EVENT_DATE&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="1065" y="235" width="90" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_res_v1" value="2024-01-15" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#888;" parent="1" vertex="1">
+                    <mxGeometry x="1200" y="235" width="80" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_res_r2" value="&lt;font style=&quot;font-size:11px&quot;&gt;EVENT_COUNT&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="1065" y="259" width="100" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_res_v2" value="1,234" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#888;" parent="1" vertex="1">
+                    <mxGeometry x="1220" y="259" width="50" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_res_r3" value="&lt;font style=&quot;font-size:11px&quot;&gt;UNIQUE_USERS&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="1065" y="283" width="110" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_res_v3" value="456" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#888;" parent="1" vertex="1">
+                    <mxGeometry x="1230" y="283" width="40" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_res_r4" value="&lt;font style=&quot;font-size:11px&quot;&gt;UNIQUE_SESSIONS&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="1065" y="307" width="130" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_res_v4" value="789" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#888;" parent="1" vertex="1">
+                    <mxGeometry x="1230" y="307" width="40" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_arrow_select_result" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;strokeColor=#FF8F00;strokeWidth=2;endArrow=blockThin;endFill=1;dashed=1;dashPattern=8 4;" parent="1" source="c1_select_from" target="c1_result_box" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1175" y="425"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="c1_note" value="&lt;b style=&quot;font-size:12px;color:#26A69A&quot;&gt;VIEWとは：&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;SQLクエリに名前を付けて保存&lt;br&gt;参照するたびにクエリが再実行される&lt;br&gt;データ自体は保持しない（仮想テーブル）&lt;/font&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#E0F2F1;strokeColor=#26A69A;shadow=1;fontSize=11;fontColor=#333333;align=left;spacingLeft=10;spacingRight=10;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="970" y="436" width="260" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_sql_box" value="&lt;pre style=&quot;text-align:left;font-size:10px;font-family:Consolas,monospace;margin:0;line-height:1.4&quot;&gt;&lt;b&gt;CREATE OR REPLACE VIEW&lt;/b&gt; V_DAILY_EVENTS &lt;b&gt;AS&lt;/b&gt;&#xa;&lt;b&gt;SELECT&lt;/b&gt; DATE(EVENT_TIMESTAMP) AS EVENT_DATE,&#xa;    COUNT(*) AS EVENT_COUNT,&#xa;    COUNT(DISTINCT USER_ID) AS UNIQUE_USERS,&#xa;    COUNT(DISTINCT SESSION_ID) AS UNIQUE_SESSIONS&#xa;&lt;b&gt;FROM&lt;/b&gt; RAW_EVENTS&#xa;&lt;b&gt;GROUP BY&lt;/b&gt; DATE(EVENT_TIMESTAMP);&lt;/pre&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BDBDBD;shadow=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;spacingRight=10;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="480" width="360" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_legend_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#E0E0E0;shadow=0;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="480" width="280" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_legend_title" value="&lt;b&gt;凡例&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="482" width="50" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_leg1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="510" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_leg1_text" value="ソーステーブル（RAW_EVENTS）" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="505" width="180" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_leg2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F7FA;strokeColor=#00ACC1;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="532" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_leg2_text" value="GROUP BY 処理" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="527" width="100" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_leg3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2F1;strokeColor=#26A69A;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="554" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_leg3_text" value="VIEW オブジェクト" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="549" width="120" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_leg4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF8F00;strokeColor=#E65100;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="576" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_leg4_text" value="クエリ結果" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="571" width="70" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_leg5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BDBDBD;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="598" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_leg5_text" value="SQL文" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="593" width="50" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_label_count" value="&lt;font style=&quot;font-size:9px;color:#00ACC1&quot;&gt;COUNT(*), COUNT(DISTINCT ...)&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;" parent="1" vertex="1">
+                    <mxGeometry x="330" y="170" width="170" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_label_create" value="&lt;font style=&quot;font-size:9px;color:#26A69A&quot;&gt;CREATE VIEW&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;" parent="1" vertex="1">
+                    <mxGeometry x="570" y="210" width="80" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

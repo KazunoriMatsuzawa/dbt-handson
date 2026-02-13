@@ -1,0 +1,109 @@
+<mxfile host="65bd71144e">
+    <diagram id="cte-complex-wall" name="実務規模のCTE：3段階で複雑化 → 壁1：CTE長大化">
+        <mxGraphModel dx="414" dy="779" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="b3_title" value="&lt;b&gt;実務規模のCTE：3段階で複雑化 → 壁1：CTE長大化&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="30" width="480" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_raw" value="&lt;b&gt;RAW_EVENTS&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;shadow=1;fontSize=13;fontColor=#333333;arcSize=20;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="150" width="150" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_users" value="&lt;b&gt;USERS&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;shadow=1;fontSize=13;fontColor=#333333;arcSize=20;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="300" width="150" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_join" value="&lt;b&gt;INNER JOIN&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;ON E.USER_ID = U.USER_ID&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;size=20;fillColor=#fff2cc;strokeColor=#d6b656;rounded=1;shadow=1;fontSize=12;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="230" y="200" width="150" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_cte1" value="&lt;b style=&quot;font-size:13px&quot;&gt;CTE 1: daily_performance&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;基本集計&lt;br&gt;GROUP BY DATE, COUNTRY, PLAN_TYPE&lt;br&gt;→ EVENT_COUNT&lt;br&gt;→ USER_COUNT&lt;br&gt;→ PURCHASE_COUNT&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F7FA;strokeColor=#00ACC1;shadow=1;fontSize=12;fontColor=#333333;arcSize=10;verticalAlign=top;spacingTop=10;spacingLeft=10;spacingRight=10;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="150" width="220" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_cte2" value="&lt;b style=&quot;font-size:13px&quot;&gt;CTE 2: performance_with_metrics&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;メトリクス計算&lt;br&gt;→ EVENTS_PER_USER&lt;br&gt;→ PURCHASE_RATE&lt;br&gt;→ CONVERSION_TIER&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F7FA;strokeColor=#00ACC1;shadow=1;fontSize=12;fontColor=#333333;arcSize=10;verticalAlign=top;spacingTop=10;spacingLeft=10;spacingRight=10;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="720" y="150" width="220" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_select" value="&lt;b&gt;SELECT *&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;ORDER BY EVENT_DATE DESC,&lt;br&gt;PURCHASE_RATE DESC&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2EBF2;strokeColor=#00838F;shadow=1;fontSize=12;fontColor=#333333;arcSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1000" y="200" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_result" value="&lt;b style=&quot;font-size:13px;color:#FFFFFF&quot;&gt;最終結果&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF8F00;strokeColor=#E65100;shadow=1;fontSize=12;fontColor=#FFFFFF;arcSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="980" y="310" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_arrow1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#6c8ebf;strokeWidth=2;endArrow=blockThin;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="b3_raw" target="b3_join" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_arrow2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#82b366;strokeWidth=2;endArrow=blockThin;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="b3_users" target="b3_join" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_arrow3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#d6b656;strokeWidth=2;endArrow=blockThin;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="b3_join" target="b3_cte1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_arrow4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#00ACC1;strokeWidth=3;endArrow=blockThin;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="b3_cte1" target="b3_cte2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_arrow5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#00ACC1;strokeWidth=2;endArrow=blockThin;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="b3_cte2" target="b3_select" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_arrow6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#00838F;strokeWidth=2;endArrow=blockThin;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="b3_select" target="b3_result" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_wall" value="&lt;b style=&quot;font-size:14px;color:#D32F2F&quot;&gt;壁1：CTE長大化の問題&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;color:#333333&quot;&gt;実務ではCTEが5段、6段...と増えていく&lt;br&gt;→ 1つのSQLファイルが数百行に&lt;br&gt;→ 途中のCTEを別クエリで再利用できない&lt;br&gt;→ ファイル分割ができない&lt;br&gt;&lt;br&gt;&lt;b style=&quot;color:#1565C0&quot;&gt;→ dbtモデル分割 + ref() で解決&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#D32F2F;shadow=1;fontSize=12;fontColor=#333333;arcSize=8;verticalAlign=top;spacingTop=12;spacingLeft=15;spacingRight=15;align=left;dashed=1;dashPattern=8 4;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="420" width="600" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_dots" value="&lt;font style=&quot;font-size:16px;color:#00ACC1&quot;&gt;...&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;fontColor=#00ACC1;" parent="1" vertex="1">
+                    <mxGeometry x="685" y="85" width="30" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_sql" value="&lt;pre style=&quot;text-align:left;font-size:9px;font-family:Consolas,monospace;margin:0;line-height:1.3&quot;&gt;&lt;b&gt;WITH&lt;/b&gt; daily_performance &lt;b&gt;AS&lt;/b&gt; (&#xa;    &lt;b&gt;SELECT&lt;/b&gt; DATE(E.EVENT_TIMESTAMP) &lt;b&gt;AS&lt;/b&gt; EVENT_DATE,&#xa;        U.COUNTRY, U.PLAN_TYPE,&#xa;        COUNT(*), COUNT(DISTINCT E.USER_ID),&#xa;        COUNT(DISTINCT &lt;b&gt;CASE WHEN&lt;/b&gt; ...)&#xa;    &lt;b&gt;FROM&lt;/b&gt; RAW_EVENTS E&#xa;    &lt;b&gt;INNER JOIN&lt;/b&gt; USERS U &lt;b&gt;ON&lt;/b&gt; E.USER_ID = U.USER_ID&#xa;    &lt;b&gt;WHERE&lt;/b&gt; E.EVENT_TIMESTAMP &gt;= DATEADD(DAY,-30,CURRENT_DATE())&#xa;    &lt;b&gt;GROUP BY&lt;/b&gt; DATE(E.EVENT_TIMESTAMP), U.COUNTRY, U.PLAN_TYPE&#xa;),&#xa;performance_with_metrics &lt;b&gt;AS&lt;/b&gt; (&#xa;    &lt;b&gt;SELECT&lt;/b&gt; *, EVENTS_PER_USER, PURCHASE_RATE,&#xa;        CONVERSION_TIER&#xa;    &lt;b&gt;FROM&lt;/b&gt; daily_performance&#xa;)&#xa;&lt;b&gt;SELECT&lt;/b&gt; * &lt;b&gt;FROM&lt;/b&gt; performance_with_metrics&#xa;&lt;b&gt;ORDER BY&lt;/b&gt; EVENT_DATE DESC, PURCHASE_RATE DESC;&lt;/pre&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BDBDBD;shadow=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;spacingRight=10;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="620" width="420" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_legend_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#E0E0E0;shadow=0;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="620" width="280" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_legend_title" value="&lt;b&gt;凡例&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="622" width="50" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="652" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg1_text" value="ソーステーブル（RAW_EVENTS）" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="647" width="180" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="676" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg2_text" value="ソーステーブル（USERS）" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="671" width="150" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="700" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg3_text" value="結合処理（INNER JOIN）" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="695" width="140" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F7FA;strokeColor=#00ACC1;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="724" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg4_text" value="CTEブロック" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="719" width="80" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2EBF2;strokeColor=#00838F;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="748" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg5_text" value="最終SELECT / ORDER BY" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="743" width="150" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg6" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF8F00;strokeColor=#E65100;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="772" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg6_text" value="クエリ結果" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="767" width="70" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg7" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#D32F2F;dashed=1;dashPattern=8 4;" parent="1" vertex="1">
+                    <mxGeometry x="515" y="796" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3_leg7_text" value="壁（問題提起）" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="791" width="100" height="24" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

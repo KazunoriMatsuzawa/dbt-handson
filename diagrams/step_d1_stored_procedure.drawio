@@ -1,0 +1,95 @@
+<mxfile host="65bd71144e">
+    <diagram id="d1-stored-procedure" name="ストアドプロシジャ：複数ステップの処理をまとめる">
+        <mxGraphModel dx="414" dy="779" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="d1_title" value="&lt;b&gt;ストアドプロシジャ：複数ステップの処理をまとめる&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="20" width="430" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_call" value="&lt;b&gt;CALL SP_CALCULATE_DAILY_SUMMARY()&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#FFB300;shadow=1;fontSize=12;fontColor=#333333;arcSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="425" y="80" width="350" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_arrow_call_sp" value="&lt;font style=&quot;font-size:9px;color:#FFB300&quot;&gt;実行&lt;/font&gt;" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#FFB300;strokeWidth=2;endArrow=blockThin;endFill=1;labelBackgroundColor=#FFFFFF;" parent="1" source="d1_call" target="d1_sp_container" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_sp_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#FFB300;shadow=1;fontSize=12;fontColor=#333333;arcSize=4;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="180" width="500" height="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_sp_title" value="&lt;b style=&quot;font-size:14px;color:#FF8F00&quot;&gt;SP_CALCULATE_DAILY_SUMMARY&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontColor=#FF8F00;" parent="1" vertex="1">
+                    <mxGeometry x="420" y="190" width="270" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_step1" value="&lt;b&gt;Step 1: DELETE&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;font-family:Consolas,monospace&quot;&gt;DELETE FROM DAILY_SUMMARY&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;shadow=0;fontSize=11;fontColor=#333333;arcSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="240" width="200" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_arrow_s1_s2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#E53935;strokeWidth=2;endArrow=blockThin;endFill=1;" parent="1" source="d1_step1" target="d1_step2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_step2" value="&lt;b&gt;Step 2: INSERT SELECT&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;font-family:Consolas,monospace&quot;&gt;INSERT INTO DAILY_SUMMARY&lt;br&gt;SELECT DATE(EVENT_TIMESTAMP),&lt;br&gt;  COUNT(*), COUNT(DISTINCT USER_ID),&lt;br&gt;  COUNT(DISTINCT SESSION_ID)&lt;br&gt;FROM RAW_EVENTS&lt;br&gt;GROUP BY DATE(EVENT_TIMESTAMP)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1E88E5;shadow=0;fontSize=11;fontColor=#333333;arcSize=8;align=left;spacingLeft=10;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="340" width="400" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_arrow_s2_s3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#1E88E5;strokeWidth=2;endArrow=blockThin;endFill=1;" parent="1" source="d1_step2" target="d1_step3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_step3" value="&lt;b&gt;Step 3: RETURN&lt;/b&gt;&lt;font style=&quot;font-size:10px&quot;&gt;  &#39;completed&#39;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#43A047;shadow=0;fontSize=11;fontColor=#333333;arcSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="480" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_raw_events" value="&lt;b&gt;RAW_EVENTS&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;ソーステーブル&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;shadow=1;fontSize=12;fontColor=#333333;arcSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="380" width="180" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_arrow_re_s2" value="&lt;font style=&quot;font-size:9px;color:#6c8ebf&quot;&gt;SELECT FROM&lt;/font&gt;" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#6c8ebf;strokeWidth=2;endArrow=blockThin;endFill=1;labelBackgroundColor=#FFFFFF;" parent="1" source="d1_raw_events" target="d1_step2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_daily_summary" value="&lt;b&gt;DAILY_SUMMARY&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;集計結果テーブル&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF8F00;strokeColor=#E65100;shadow=1;fontSize=12;fontColor=#FFFFFF;arcSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="950" y="300" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_arrow_s1_ds" value="&lt;font style=&quot;font-size:9px;color:#E53935&quot;&gt;DELETE&lt;/font&gt;" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#E53935;strokeWidth=2;endArrow=blockThin;endFill=1;labelBackgroundColor=#FFFFFF;" parent="1" source="d1_step1" target="d1_daily_summary" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="880" y="265"/>
+                            <mxPoint x="880" y="330"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d1_arrow_s2_ds" value="&lt;font style=&quot;font-size:9px;color:#1E88E5&quot;&gt;INSERT&lt;/font&gt;" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#1E88E5;strokeWidth=2;endArrow=blockThin;endFill=1;labelBackgroundColor=#FFFFFF;" parent="1" source="d1_step2" target="d1_daily_summary" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="880" y="390"/>
+                            <mxPoint x="880" y="330"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d1_wall4" value="&lt;b style=&quot;font-size:13px;color:#D32F2F&quot;&gt;壁4：テスト困難 / Git管理困難&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;• DELETE+INSERTが走る &amp;rarr; ステップ2だけテスト不可&lt;br&gt;• 中間結果が見えない &amp;rarr; デバッグ困難&lt;br&gt;• CREATE PROCEDURE内にSQL埋め込み &amp;rarr; Git差分が見づらい&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#D32F2F;shadow=0;fontSize=11;fontColor=#333333;arcSize=8;dashed=1;dashPattern=8 4;align=left;spacingLeft=12;spacingTop=5;spacingRight=8;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="610" width="500" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_sql_box" value="&lt;pre style=&quot;text-align:left;font-size:10px;font-family:Consolas,monospace;margin:0;line-height:1.4&quot;&gt;&lt;b&gt;CREATE OR REPLACE PROCEDURE&lt;/b&gt;&#xa;  SP_CALCULATE_DAILY_SUMMARY()&#xa;&lt;b&gt;RETURNS&lt;/b&gt; VARCHAR &lt;b&gt;LANGUAGE&lt;/b&gt; SQL &lt;b&gt;AS&lt;/b&gt; $$&#xa;&lt;b&gt;BEGIN&lt;/b&gt;&#xa;    DELETE FROM DAILY_SUMMARY;&#xa;    INSERT INTO DAILY_SUMMARY&#xa;      (EVENT_DATE, EVENT_COUNT,&#xa;       UNIQUE_USERS, UNIQUE_SESSIONS)&#xa;    SELECT DATE(EVENT_TIMESTAMP),&#xa;      COUNT(*),&#xa;      COUNT(DISTINCT USER_ID),&#xa;      COUNT(DISTINCT SESSION_ID)&#xa;    FROM RAW_EVENTS&#xa;    GROUP BY DATE(EVENT_TIMESTAMP);&#xa;    RETURN &amp;#39;Daily summary completed&amp;#39;;&#xa;&lt;b&gt;END&lt;/b&gt;; $$;&lt;/pre&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BDBDBD;shadow=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;spacingRight=10;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="610" width="260" height="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_legend_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#E0E0E0;shadow=0;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="770" width="260" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_legend_title" value="&lt;b&gt;凡例&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="772" width="50" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_leg1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#FFB300;" parent="1" vertex="1">
+                    <mxGeometry x="365" y="800" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_leg1_text" value="ストアドプロシジャ" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="795" width="120" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_leg2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="365" y="822" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_leg2_text" value="ソーステーブル" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="817" width="100" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_leg3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF8F00;strokeColor=#E65100;" parent="1" vertex="1">
+                    <mxGeometry x="365" y="844" width="16" height="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1_leg3_text" value="出力テーブル" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="839" width="80" height="24" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
